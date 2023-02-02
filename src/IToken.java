@@ -100,6 +100,4 @@ public interface IToken {
 	 * @return
 	 */
 	public String getTokenString();
-
-
 }
