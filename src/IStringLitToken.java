@@ -12,7 +12,12 @@
 package edu.ufl.cise.plcsp23;
 
 public interface IStringLitToken extends IToken {
-	
 	String getValue();
+}
 
+public class StringLitToken implements IStringLitToken {
+	@Override
+	public String getValue() {
+		return null;
+	}
 }

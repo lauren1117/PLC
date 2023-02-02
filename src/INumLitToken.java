@@ -11,7 +11,13 @@
 package edu.ufl.cise.plcsp23;
 
 public interface INumLitToken extends IToken {
-
 	int getValue();
-
 }
+
+class NumLitToken implements INumLitToken {
+
+	public int getValue() {
+		return 0;
+	}
+}
+
