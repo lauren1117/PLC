@@ -3,18 +3,24 @@ public class MyToken implements edu.ufl.cise.plcsp23.IToken {
     Kind tokenKind;
     SourceLocation sourceLocation;
 
+    public MyToken(String token, Kind kind, SourceLocation location){
+        tokenString = token;
+        tokenKind = kind;
+        sourceLocation = location;
+    }
+
     @Override
     public SourceLocation getSourceLocation() {
-        return null;
+        return sourceLocation;
     }
 
     @Override
     public Kind getKind() {
-        return null;
+        return tokenKind;
     }
 
     @Override
     public String getTokenString() {
-        return "token_string";
+        return tokenString;
     }
 }
