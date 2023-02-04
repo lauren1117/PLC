@@ -21,6 +21,7 @@ public interface IToken {
 		IDENT,
 		NUM_LIT,
 		STRING_LIT,
+		//==============RESERVED=============//
 		RES_image,
 		RES_pixel,
 		RES_int,
@@ -47,6 +48,7 @@ public interface IToken {
 		RES_atan,
 		RES_if,
 		RES_while,
+		//=============Operators===========//
 		DOT, //  .
 		COMMA, // ,
 		QUESTION, // ?
