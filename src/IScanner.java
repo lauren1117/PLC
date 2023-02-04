@@ -21,3 +21,4 @@ public interface IScanner {
 	IToken next() throws LexicalException;
 
 }
+

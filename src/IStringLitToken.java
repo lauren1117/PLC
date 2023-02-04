@@ -8,16 +8,9 @@
  * This code may not be posted on a public web site either during or after the course.  
  */
 
-
 package edu.ufl.cise.plcsp23;
 
 public interface IStringLitToken extends IToken {
 	String getValue();
 }
 
-public class StringLitToken implements IStringLitToken {
-	@Override
-	public String getValue() {
-		return null;
-	}
-}

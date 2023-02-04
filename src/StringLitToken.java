@@ -1,9 +1,10 @@
 package edu.ufl.cise.plcsp23;
 
-public class MyToken implements IToken {
-    String tokenString;
-    Kind tokenKind;
-    SourceLocation sourceLocation;
+public class StringLitToken implements IStringLitToken {
+    @Override
+    public String getValue() {
+        return null;
+    }
 
     @Override
     public SourceLocation getSourceLocation() {
@@ -17,6 +18,6 @@ public class MyToken implements IToken {
 
     @Override
     public String getTokenString() {
-        return "token_string";
+        return null;
     }
 }
