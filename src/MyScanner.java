@@ -1,7 +1,6 @@
-import edu.ufl.cise.plcsp23.IScanner;
+package edu.ufl.cise.plcsp23;
 
 import java.util.ArrayList;
-import java.util.TooManyListenersException;
 
 public class MyScanner implements IScanner {
     int pos;
@@ -13,9 +12,9 @@ public class MyScanner implements IScanner {
         list_of_tokens = Tokenize(input);
     }
 
-    public ArrayList<IToken> Tokenize(String scannerInputnput) {
+    public ArrayList<IToken> Tokenize(String scannerInput) {
         pos = 0;
-        ch = input.charAt(pos);
+        ch = scannerInput.charAt(pos);
         //actually tokenize
         //switch cases for states, what happens for each
         //check for eof

@@ -14,10 +14,3 @@ public interface INumLitToken extends IToken {
 	int getValue();
 }
 
-class NumLitToken implements INumLitToken {
-
-	public int getValue() {
-		return 0;
-	}
-}
-
