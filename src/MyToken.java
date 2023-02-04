@@ -1,9 +1,11 @@
-public class MyToken implements edu.ufl.cise.plcsp23.IToken {
+package edu.ufl.cise.plcsp23;
+
+public class MyToken implements IToken {
     final String tokenString;
     final Kind tokenKind;
     final SourceLocation sourceLocation;
 
-    public MyToken(String token, Kind kind, SourceLocation location){
+    public MyToken(String token, Kind kind, SourceLocation location) {
         tokenString = token;
         tokenKind = kind;
         sourceLocation = location;
