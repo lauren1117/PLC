@@ -101,6 +101,26 @@ class TestScanner_starter {
 		IScanner scanner = CompilerComponentFactory.makeScanner(input);
 		checkEOF(scanner.next());
 	}
+	@Test
+	void testNumLit() throws LexicalException {
+		String input = "12 30 39854 0345";
+		IScanner scanner = CompilerComponentFactory.makeScanner(input);
+		checkNUM_LIT(12, scanner.next());
+		checkNUM_LIT(30, scanner.next());
+		checkNUM_LIT(39854, scanner.next());
+		checkNUM_LIT(0, scanner.next());
+		checkNUM_LIT(345, scanner.next());
+		checkEOF(scanner.next());
+	}
+
+	@Test
+	void testIdent() throws LexicalException{
+		String input = "_019abc _tre";
+		IScanner scanner = CompilerComponentFactory.makeScanner(input);
+		checkIdent("_019abc", scanner.next());
+		checkIdent("_tre", scanner.next());
+		checkEOF(scanner.next());
+	}
 
 	@Test
 	void onlyWhiteSpace() throws LexicalException {
