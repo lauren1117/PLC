@@ -1,6 +1,7 @@
 package edu.ufl.cise.plcsp23;
 
-import java.util.ArrayList;
+import java.util.*;
+
 import static java.lang.Character.*;
 
 //import static java.lang.Character.isDigit;
@@ -8,6 +9,72 @@ import static java.lang.Character.*;
 public class MyScanner implements IScanner {
     ArrayList<IToken> list_of_tokens;
     int currIndex = 0;
+
+    public static HashMap<String, IToken.Kind> reservedWords = new HashMap<String, IToken.Kind>() {{
+        put("image", IToken.Kind.RES_image);
+        put("pixel", IToken.Kind.RES_pixel);
+        put("int", IToken.Kind.RES_int);
+        put("string", IToken.Kind.RES_string);
+        put("void", IToken.Kind.RES_void);
+        put("nil", IToken.Kind.RES_nil);
+        put("load", IToken.Kind.RES_load);
+        put("display", IToken.Kind.RES_display);
+        put("write", IToken.Kind.RES_write);
+        put("x", IToken.Kind.RES_x);
+        put("y", IToken.Kind.RES_y);
+        put("a", IToken.Kind.RES_a);
+        put("r", IToken.Kind.RES_r);
+        put("X", IToken.Kind.RES_X);
+        put("Y", IToken.Kind.RES_Y);
+        put("Z", IToken.Kind.RES_Z);
+        put("x_cart", IToken.Kind.RES_x_cart);
+        put("y_cart", IToken.Kind.RES_y_cart);
+        put("a_polar", IToken.Kind.RES_a_polar);
+        put("r_polar", IToken.Kind.RES_r_polar);
+        put("rand", IToken.Kind.RES_rand);
+        put("sin", IToken.Kind.RES_sin);
+        put("cos", IToken.Kind.RES_cos);
+        put("atan", IToken.Kind.RES_atan);
+        put("if", IToken.Kind.RES_if);
+        put("while", IToken.Kind.RES_while);
+    }};
+
+    public static HashMap<String, IToken.Kind> opSingleChar = new HashMap<String, IToken.Kind>() {{
+        put(".", IToken.Kind.DOT);
+        put(",", IToken.Kind.COMMA);
+        put("?", IToken.Kind.QUESTION);
+        put(":", IToken.Kind.COLON);
+        put("(", IToken.Kind.LPAREN);
+        put(")", IToken.Kind.RPAREN);
+        put("[", IToken.Kind.LSQUARE);
+        put("]", IToken.Kind.RSQUARE);
+        put("{", IToken.Kind.LCURLY);
+        put("}", IToken.Kind.RCURLY);
+        put("!", IToken.Kind.BANG);
+        put("+", IToken.Kind.PLUS);
+        put("-", IToken.Kind.MINUS);
+        put("/", IToken.Kind.DIV);
+        put("%", IToken.Kind.MOD);
+    }};
+
+    public static HashMap<String, IToken.Kind> opInitial = new HashMap<String, IToken.Kind>() {{
+        put("<",  IToken.Kind.LT);
+        put(">", IToken.Kind.GT);
+        put("=", IToken.Kind.ASSIGN);
+        put("&", IToken.Kind.BITAND);
+        put("|", IToken.Kind.BITOR);
+        put("*", IToken.Kind.TIMES);
+    }};
+
+    public static HashMap<String, IToken.Kind> opMultiChar = new HashMap<String, IToken.Kind>() {{
+        put("==", IToken.Kind.EQ);
+        put("<->", IToken.Kind.EXCHANGE);
+        put("<=", IToken.Kind.LE);
+        put(">=", IToken.Kind.GE);
+        put("&&", IToken.Kind.AND);
+        put("||", IToken.Kind.OR);
+        put("**", IToken.Kind.EXP);
+    }};
 
     private enum State {
         //adjust with our own states
@@ -61,9 +128,6 @@ public class MyScanner implements IScanner {
                         else {
                             state = State.IN_NUM_LIT;
                             currToken += ch;
-
-                            //CHECK SIZE OF INT
-
                         }
                     }
                     //else if (a-z, A-Z, _) state = ident
@@ -72,6 +136,14 @@ public class MyScanner implements IScanner {
                         currToken += ch;
                     }
                     //else if (~) state = COMMENT
+                    else if (ch == '~'){
+                        state = State.COMMENT;
+                        currToken += ch;
+                    }
+                    else if (ch == '"'){
+                        state = State.IN_STRING_LIT;
+                        currToken += ch;
+                    }
                     //else if (") state = string_lit
                     //else if operator --> one two or three chars?
                     //else error or eof ??
@@ -109,7 +181,12 @@ public class MyScanner implements IScanner {
                         currToken += ch;
                     }
                     else {
-                        tokens.add(new MyToken(currToken, IToken.Kind.IDENT, new IToken.SourceLocation(row, col)));
+                        if (reservedWords.containsKey(currToken)){
+                            tokens.add(new MyToken(currToken, reservedWords.get(currToken), new IToken.SourceLocation(row, col)));
+                        }
+                        else {
+                            tokens.add(new MyToken(currToken, IToken.Kind.IDENT, new IToken.SourceLocation(row, col)));
+                        }
                         state = State.START;
                         currToken = "";
                         i--;
@@ -145,7 +222,12 @@ public class MyScanner implements IScanner {
                 }
             }
             case IN_IDENT -> {
-                tokens.add(new MyToken(currToken, IToken.Kind.IDENT, new IToken.SourceLocation(row, col)));
+                if (reservedWords.containsKey(currToken)){
+                    tokens.add(new MyToken(currToken, reservedWords.get(currToken), new IToken.SourceLocation(row, col)));
+                }
+                else {
+                    tokens.add(new MyToken(currToken, IToken.Kind.IDENT, new IToken.SourceLocation(row, col)));
+                }
             }
         }
 

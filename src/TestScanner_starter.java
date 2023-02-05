@@ -101,6 +101,7 @@ class TestScanner_starter {
 		IScanner scanner = CompilerComponentFactory.makeScanner(input);
 		checkEOF(scanner.next());
 	}
+
 	@Test
 	void testNumLit() throws LexicalException {
 		String input = "12 30 39854 0345";
@@ -154,6 +155,22 @@ class TestScanner_starter {
 		});
 	}
 
+
+	@Test
+	void checkReservedAndIdents() throws LexicalException {
+		String input = """
+				x yx imagethree
+				pixel
+				sins
+				""";
+		IScanner scanner = CompilerComponentFactory.makeScanner(input);
+		checkToken(Kind.RES_x, scanner.next());
+		checkToken(Kind.IDENT, scanner.next());
+		checkToken(Kind.IDENT, scanner.next());
+		checkToken(Kind.RES_pixel, scanner.next());
+		checkToken(Kind.IDENT, scanner.next());
+		checkEOF(scanner.next());
+	}
 
 	@Test
 	void identsAndReserved() throws LexicalException {
