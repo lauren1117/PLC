@@ -11,7 +11,7 @@
 package edu.ufl.cise.plcsp23;
 
 public class CompilerComponentFactory {
-	public static IScanner makeScanner(String input) {
+	public static IScanner makeScanner(String input) throws LexicalException {
 		//Add statement to return an instance of your scanner
 		return new MyScanner(input);
 	}
