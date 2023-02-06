@@ -76,6 +76,14 @@ public class MyScanner implements IScanner {
         put("**", IToken.Kind.EXP);
     }};
 
+    public static HashMap<String, String> escapeSeq = new HashMap<String, String>() {{
+        put("b", "8");
+        put("n", "10");
+        put("r", "13");
+        put("t", "9");
+        put("\"", "34");
+    }};
+
     private enum State {
         //adjust with our own states
         START,
@@ -97,6 +105,7 @@ public class MyScanner implements IScanner {
         ArrayList<IToken> tokens = new ArrayList<IToken>();
         State state = State.START;
         String currToken = "";
+        String stringLitVal = "";
 
         //increment when new line is encountered
         int row = 1;
@@ -115,6 +124,7 @@ public class MyScanner implements IScanner {
             switch(state) {
                 case START -> {
                     currToken = "";
+                    stringLitVal = "";
 
                     //if whitespace, continue no change
                     if(ch == 32 | ch == 13 | ch == 10 | ch == 12 | ch == 9) {
@@ -205,7 +215,7 @@ public class MyScanner implements IScanner {
                     if (ch == '"'){
                         state = State.START;
                         currToken += ch;
-                        tokens.add(new StringLitToken(currToken.substring(1,currToken.length() - 1), new IToken.SourceLocation(row,col), IToken.Kind.STRING_LIT, currToken));
+                        tokens.add(new StringLitToken(stringLitVal, new IToken.SourceLocation(row,col), IToken.Kind.STRING_LIT, currToken));
                     }
                     // if esc sequence, add to currToken, state = esc
                     else if (ch == '\\'){
@@ -215,6 +225,7 @@ public class MyScanner implements IScanner {
                     //if input char (excluding " or \) state = string_lit
                     else if ((ch >= 0 && ch <= 127) && ch != 34 && ch != 92){
                         currToken += ch;
+                        stringLitVal += ch;
                     }
                 }
 
@@ -281,6 +292,8 @@ public class MyScanner implements IScanner {
                         //if (b | t | n | r | " | \)
                         if (ch == 98 || ch == 116 || ch == 110 || ch == 114 || ch == 34 || ch == 92){
                             currToken += ch;
+                            stringLitVal = currToken.substring(1, currToken.length() - 2);
+                            stringLitVal += (char) Integer.parseInt(escapeSeq.get(Character.toString(ch)));//corresponding escape sequence
                             state = State.IN_STRING_LIT;
                         }
                         //else, error

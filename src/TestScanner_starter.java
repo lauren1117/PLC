@@ -181,7 +181,6 @@ class TestScanner_starter {
 				""";
 
 		IScanner scanner = CompilerComponentFactory.makeScanner(input);
-		checkToken(Kind.IDENT, scanner.next());
 		checkToken(Kind.IDENT,"i0", new SourceLocation(1,1), scanner.next());
 		checkToken(Kind.IDENT, "i1", new SourceLocation(2,3), scanner.next());
 		checkToken(Kind.RES_x, "x", new SourceLocation(2,7), scanner.next());
@@ -243,21 +242,32 @@ class TestScanner_starter {
 		String input = """
 				"hello"
 				"\t"
+				"\\""
 				""";
 		IScanner scanner = CompilerComponentFactory.makeScanner(input);
 		checkString(input.substring(0, 7),"hello", new SourceLocation(1,1), scanner.next());
 		checkString(input.substring(8, 11), "\t", new SourceLocation(1,1), scanner.next());
-		//checkString(input.substring(12, 16), "\"",  new SourceLocation(1,1), scanner.next());
+		checkString(input.substring(12, 16), "\"",  new SourceLocation(1,1), scanner.next());
+		checkEOF(scanner.next());
+	}
+
+	@Test
+	void slackExample() throws LexicalException {
+		String input = """
+				"hello\\n"
+				""";
+		IScanner scanner = CompilerComponentFactory.makeScanner(input);
+		checkString("\"hello\\n\"", "hello\n", new SourceLocation(1,1), scanner.next());
 		checkEOF(scanner.next());
 	}
 
 	@Test
 	void stringLitsLegalEsc() throws LexicalException {
 		String input = """
-				"\\t"
+				"\\b"
 				""";
 		IScanner scanner = CompilerComponentFactory.makeScanner(input);
-		checkString("\"\\t\"", "\t", new SourceLocation(1,1), scanner.next());
+		checkString("\"\\b\"", "\b", new SourceLocation(1,1), scanner.next());
 		checkEOF(scanner.next());
 	}
 
@@ -465,5 +475,29 @@ class TestScanner_starter {
 		checkToken(Kind.IDENT, scanner.next());
 		checkToken(Kind.IDENT, scanner.next());
 	}
+
+	@Test
+	void mathEquation2() throws LexicalException {
+		String input = """
+				5 * 5 = 25
+				25 > 10
+				7 - 3 = 4
+				""";
+		IScanner scanner = CompilerComponentFactory.makeScanner(input);
+		checkNUM_LIT(5, scanner.next());
+		checkToken(Kind.TIMES,"*", new SourceLocation(1,3), scanner.next());
+		checkNUM_LIT(5, scanner.next());
+		checkToken(Kind.ASSIGN,"=", new SourceLocation(1,7), scanner.next());
+		checkNUM_LIT(25, scanner.next());
+		checkNUM_LIT(25, scanner.next());
+		checkToken(Kind.GT,">", new SourceLocation(2,4), scanner.next());
+		checkNUM_LIT(10, scanner.next());
+		checkNUM_LIT(7, scanner.next());
+		checkToken(Kind.MINUS,"-", new SourceLocation(3,3), scanner.next());
+		checkNUM_LIT(3, scanner.next());
+		checkToken(Kind.ASSIGN,"=", new SourceLocation(3,7), scanner.next());
+		checkNUM_LIT(4, scanner.next());
+	}
+
 
 }
