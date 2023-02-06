@@ -189,6 +189,20 @@ class TestScanner_starter {
 		checkEOF(scanner.next());
 	}
 	
+	@Test
+	void singleCharOps() throws LexicalException {
+		String input = """
+				.%?[!
+				""";
+		IScanner scanner = CompilerComponentFactory.makeScanner(input);
+		checkToken(Kind.DOT, scanner.next());
+		checkToken(Kind.MOD, scanner.next());
+		checkToken(Kind.QUESTION, scanner.next());
+		checkToken(Kind.LSQUARE, scanner.next());
+		checkToken(Kind.BANG, scanner.next());
+		checkEOF(scanner.next());
+	}
+
 
 	@Test
 	void operators0() throws LexicalException {

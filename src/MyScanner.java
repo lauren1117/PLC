@@ -83,6 +83,8 @@ public class MyScanner implements IScanner {
         IN_NUM_LIT,
         IN_STRING_LIT,
         ESCAPE,
+        OPERATION,
+        IN_EXCHANGE,
         ERROR,
         COMMENT
     }
@@ -112,6 +114,8 @@ public class MyScanner implements IScanner {
             char ch = scannerInput.charAt(i);
             switch(state) {
                 case START -> {
+                    currToken = "";
+
                     //if whitespace, continue no change
                     if(ch == 32 | ch == 13 | ch == 10 | ch == 12 | ch == 9) {
                         state = State.START;
@@ -140,12 +144,24 @@ public class MyScanner implements IScanner {
                         state = State.COMMENT;
                         currToken += ch;
                     }
+                    //else if (") state = string_lit
                     else if (ch == '"'){
                         state = State.IN_STRING_LIT;
                         currToken += ch;
                     }
-                    //else if (") state = string_lit
                     //else if operator --> one two or three chars?
+                    else if (opSingleChar.containsKey(Character.toString(ch))){
+                        currToken += ch;
+                        tokens.add(new MyToken(currToken, opSingleChar.get(Character.toString(ch)), new IToken.SourceLocation(row, col)));
+                    }
+                    else if (opInitial.containsKey(Character.toString(ch))){
+                        state = State.OPERATION;
+                        currToken += ch;
+                    }
+
+
+
+
                     //else error or eof ??
                 }
 
@@ -166,7 +182,6 @@ public class MyScanner implements IScanner {
                     else {
                         tokens.add(new NumLitToken(Integer.parseInt(currToken), new IToken.SourceLocation(row,col), IToken.Kind.NUM_LIT, currToken));
                         state = State.START;
-                        currToken = "";
                         i--;
                     }
                 }
@@ -188,7 +203,6 @@ public class MyScanner implements IScanner {
                             tokens.add(new MyToken(currToken, IToken.Kind.IDENT, new IToken.SourceLocation(row, col)));
                         }
                         state = State.START;
-                        currToken = "";
                         i--;
                     }
                 }
@@ -202,6 +216,31 @@ public class MyScanner implements IScanner {
                     //if ", state = start, add toCurrToken, push to list, set string empty
                     //else, error
                 }
+
+                case OPERATION -> {
+                    if (currToken == "<" && ch == '='){
+                        currToken += ch;
+                        tokens.add(new MyToken(currToken, opMultiChar.get(currToken), new IToken.SourceLocation(row,col)));
+                    }
+                    else if(currToken == "<" && ch == '-'){
+                        state = State.IN_EXCHANGE;
+                        break;
+                    }
+                    else if (currToken == ">" && ch == '='){
+                        currToken += ch;
+                        tokens.add(new MyToken(currToken, opMultiChar.get(currToken), new IToken.SourceLocation(row,col)));
+                    }
+                    else if (currToken.equals(Character.toString(ch))){
+                        currToken += ch;
+                        tokens.add(new MyToken(currToken, opMultiChar.get(currToken), new IToken.SourceLocation(row,col)));
+                    }
+                    else {
+                        //ERROR??
+                        tokens.add(new MyToken(currToken, opInitial.get(currToken), new IToken.SourceLocation(row,col)));
+                    }
+                    state = State.START;
+                }
+
                 case COMMENT -> {
                     //if ascii char except lf cr
                 }
