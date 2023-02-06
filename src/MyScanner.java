@@ -200,10 +200,22 @@ public class MyScanner implements IScanner {
                 }
 
                 case IN_STRING_LIT -> {
-                    //if input char (excluding " or \) state = string_lit
-                    // if esc sequence, add to currToken, state = esc
-                    //if ", state = start, add toCurrToken, push to list, set string empty
                     //else, error
+                    //if ", state = start, add toCurrToken, push to list, set string empty
+                    if (ch == '"'){
+                        state = State.START;
+                        currToken += ch;
+                        tokens.add(new StringLitToken(currToken.substring(1,currToken.length() - 1), new IToken.SourceLocation(row,col), IToken.Kind.STRING_LIT, currToken));
+                    }
+                    // if esc sequence, add to currToken, state = esc
+                    else if (ch == '\\'){
+                        state = State.ESCAPE;
+                        currToken += ch;
+                    }
+                    //if input char (excluding " or \) state = string_lit
+                    else if ((ch >= 0 && ch <= 127) && ch != 34 && ch != 92){
+                        currToken += ch;
+                    }
                 }
 
                 case OPERATION -> {
@@ -265,8 +277,22 @@ public class MyScanner implements IScanner {
 
                 }
                 case ESCAPE -> {
-                    //if (b | t | n | r | " | \), what do we do????
-                    //else, error
+                    try {
+                        //if (b | t | n | r | " | \)
+                        if (ch == 98 || ch == 116 || ch == 110 || ch == 114 || ch == 34 || ch == 92){
+                            currToken += ch;
+                            state = State.IN_STRING_LIT;
+                        }
+                        //else, error
+                        else {
+                            tokens.add(new MyToken("Illegal Escape", IToken.Kind.ERROR, new IToken.SourceLocation(row,col)));
+                            throw new Exception();
+                        }
+                    }
+                    catch(Exception e) {
+                        throw new LexicalException("Illegal Escape");
+                    }
+
                 }
             }
         }
@@ -287,6 +313,11 @@ public class MyScanner implements IScanner {
                 else {
                     tokens.add(new MyToken(currToken, IToken.Kind.IDENT, new IToken.SourceLocation(row, col)));
                 }
+            }
+            case IN_STRING_LIT -> {
+                //if exited forloop without reaching a " to close the string and reset the state to start,
+                //add an error
+                tokens.add(new MyToken("ERROR", IToken.Kind.ERROR, new IToken.SourceLocation(row,col)));
             }
         }
 
