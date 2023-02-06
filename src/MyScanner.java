@@ -111,6 +111,7 @@ public class MyScanner implements IScanner {
         int row = 1;
         //set to 1 when new line is encountered
         int col = 1;
+        int initialPos = 1;
 
         //if empty string, return EOF token
         int length = scannerInput.length();
@@ -125,9 +126,17 @@ public class MyScanner implements IScanner {
                 case START -> {
                     currToken = "";
                     stringLitVal = "";
-
+                    initialPos = col;
                     //if whitespace, continue no change
+                    //space, carriage, line feed, form feed, tab
                     if(ch == 32 | ch == 13 | ch == 10 | ch == 12 | ch == 9) {
+                        if(ch == 10) {
+                            row++;
+                            col = 1;
+                        }
+                        else {
+                            col++;
+                        }
                         state = State.START;
                     }
 
@@ -137,35 +146,42 @@ public class MyScanner implements IScanner {
                     else if(isDigit(ch)){
                         if(ch == '0') {
                             //add to list
-                            tokens.add(new NumLitToken(0, new IToken.SourceLocation(row,col), IToken.Kind.NUM_LIT, "0"));
+                            tokens.add(new NumLitToken(0, new IToken.SourceLocation(row,initialPos), IToken.Kind.NUM_LIT, "0"));
                         }
                         else {
                             state = State.IN_NUM_LIT;
                             currToken += ch;
                         }
+                        col++;
                     }
                     //else if (a-z, A-Z, _) state = ident
                     else if (isAlphabetic(ch) | ch == '_') {
                         state = State.IN_IDENT;
                         currToken += ch;
+                        col++;
                     }
                     //else if (~) state = COMMENT
                     else if (ch == '~') {
                         state = State.COMMENT;
+                        row++;
+                        col = 1;
                     }
                     //else if (") state = string_lit
                     else if (ch == '"'){
                         state = State.IN_STRING_LIT;
                         currToken += ch;
+                        col++;
                     }
                     //else if operator --> one two or three chars?
                     else if (opSingleChar.containsKey(Character.toString(ch))){
                         currToken += ch;
-                        tokens.add(new MyToken(currToken, opSingleChar.get(Character.toString(ch)), new IToken.SourceLocation(row, col)));
+                        tokens.add(new MyToken(currToken, opSingleChar.get(Character.toString(ch)), new IToken.SourceLocation(row, initialPos)));
+                        col++;
                     }
                     else if (opInitial.containsKey(Character.toString(ch))){
                         state = State.OPERATION;
                         currToken += ch;
+                        col++;
                     }
                     else {
                         //insert error token?
@@ -179,13 +195,14 @@ public class MyScanner implements IScanner {
                         currToken += ch;
                         long lengthTest = Long.parseLong(currToken);
                         if (lengthTest > Integer.MAX_VALUE){
-                            tokens.add(new MyToken("Number is larger than INT MAX", IToken.Kind.ERROR, new IToken.SourceLocation(row, col)));
+                            tokens.add(new MyToken("Number is larger than INT MAX", IToken.Kind.ERROR, new IToken.SourceLocation(row, initialPos)));
                             state = State.ERROR;
                             break forloop;
                         }
+                        col++;
                     }
                     else {
-                        tokens.add(new NumLitToken(Integer.parseInt(currToken), new IToken.SourceLocation(row,col), IToken.Kind.NUM_LIT, currToken));
+                        tokens.add(new NumLitToken(Integer.parseInt(currToken), new IToken.SourceLocation(row,initialPos), IToken.Kind.NUM_LIT, currToken));
                         state = State.START;
                         i--;
                     }
@@ -196,13 +213,14 @@ public class MyScanner implements IScanner {
                     //else; add new token to list, set currToken empty, set state to START, i--
                     if (isAlphabetic(ch) | isDigit(ch) | ch == '_'){
                         currToken += ch;
+                        col++;
                     }
                     else {
                         if (reservedWords.containsKey(currToken)){
-                            tokens.add(new MyToken(currToken, reservedWords.get(currToken), new IToken.SourceLocation(row, col)));
+                            tokens.add(new MyToken(currToken, reservedWords.get(currToken), new IToken.SourceLocation(row, initialPos)));
                         }
                         else {
-                            tokens.add(new MyToken(currToken, IToken.Kind.IDENT, new IToken.SourceLocation(row, col)));
+                            tokens.add(new MyToken(currToken, IToken.Kind.IDENT, new IToken.SourceLocation(row, initialPos)));
                         }
                         state = State.START;
                         i--;
@@ -215,7 +233,7 @@ public class MyScanner implements IScanner {
                     if (ch == '"'){
                         state = State.START;
                         currToken += ch;
-                        tokens.add(new StringLitToken(stringLitVal, new IToken.SourceLocation(row,col), IToken.Kind.STRING_LIT, currToken));
+                        tokens.add(new StringLitToken(stringLitVal, new IToken.SourceLocation(row,initialPos), IToken.Kind.STRING_LIT, currToken));
                     }
                     // if esc sequence, add to currToken, state = esc
                     else if (ch == '\\'){
@@ -227,43 +245,48 @@ public class MyScanner implements IScanner {
                         currToken += ch;
                         stringLitVal += ch;
                     }
+                    col++;
                 }
 
                 case OPERATION -> {
                     if (currToken.equals("<")){
                         if (ch == '='){
                             currToken += ch;
-                            tokens.add(new MyToken(currToken, opMultiChar.get(currToken), new IToken.SourceLocation(row,col)));
+                            tokens.add(new MyToken(currToken, opMultiChar.get(currToken), new IToken.SourceLocation(row,initialPos)));
+                            col++;
                         }
                         else if (ch == '-') {
                             currToken += ch;
+                            col++;
                             state = State.IN_EXCHANGE;
                             break;
                         }
                         else {
                             //single-char op
-                            tokens.add(new MyToken(currToken, opInitial.get(currToken), new IToken.SourceLocation(row,col)));
+                            tokens.add(new MyToken(currToken, opInitial.get(currToken), new IToken.SourceLocation(row,initialPos)));
                             i--;
                         }
                     }
                     else if (currToken.equals(">")){
                         if (ch == '='){
                             currToken += ch;
-                            tokens.add(new MyToken(currToken, opMultiChar.get(currToken), new IToken.SourceLocation(row,col)));
+                            tokens.add(new MyToken(currToken, opMultiChar.get(currToken), new IToken.SourceLocation(row,initialPos)));
+                            col++;
                         }
                         else {
                             //single-char op
-                            tokens.add(new MyToken(currToken, opInitial.get(currToken), new IToken.SourceLocation(row,col)));
+                            tokens.add(new MyToken(currToken, opInitial.get(currToken), new IToken.SourceLocation(row,initialPos)));
                             i--;
                         }
                     }
                     else if (currToken.equals(Character.toString(ch))){
                         currToken += ch;
-                        tokens.add(new MyToken(currToken, opMultiChar.get(currToken), new IToken.SourceLocation(row,col)));
+                        tokens.add(new MyToken(currToken, opMultiChar.get(currToken), new IToken.SourceLocation(row,initialPos)));
+                        col++;
                     }
                     else {
                         //single-char op
-                        tokens.add(new MyToken(currToken, opInitial.get(currToken), new IToken.SourceLocation(row,col)));
+                        tokens.add(new MyToken(currToken, opInitial.get(currToken), new IToken.SourceLocation(row,initialPos)));
                         i--;
                     }
                     state = State.START;
@@ -272,10 +295,11 @@ public class MyScanner implements IScanner {
                 case IN_EXCHANGE -> {
                     if (ch == '>'){
                         currToken += ch;
-                        tokens.add(new MyToken(currToken, IToken.Kind.EXCHANGE, new IToken.SourceLocation(row, col)));
+                        tokens.add(new MyToken(currToken, IToken.Kind.EXCHANGE, new IToken.SourceLocation(row, initialPos)));
+                        col++;
                     }
                     else{
-                        tokens.add(new MyToken("ERROR", IToken.Kind.ERROR, new IToken.SourceLocation(row,col)));
+                        tokens.add(new MyToken("ERROR", IToken.Kind.ERROR, new IToken.SourceLocation(row,initialPos)));
                     }
                     state = State.START;
                 }
@@ -287,6 +311,7 @@ public class MyScanner implements IScanner {
                     }
 
                 }
+
                 case ESCAPE -> {
                     try {
                         //if (b | t | n | r | " | \)
@@ -298,7 +323,7 @@ public class MyScanner implements IScanner {
                         }
                         //else, error
                         else {
-                            tokens.add(new MyToken("Illegal Escape", IToken.Kind.ERROR, new IToken.SourceLocation(row,col)));
+                            tokens.add(new MyToken("Illegal Escape", IToken.Kind.ERROR, new IToken.SourceLocation(row,initialPos)));
                             throw new Exception();
                         }
                     }
@@ -313,7 +338,7 @@ public class MyScanner implements IScanner {
         switch(state){
             case IN_NUM_LIT -> {
                 try {
-                    tokens.add(new NumLitToken(Integer.parseInt(currToken), new IToken.SourceLocation(row,col), IToken.Kind.NUM_LIT, currToken));
+                    tokens.add(new NumLitToken(Integer.parseInt(currToken), new IToken.SourceLocation(row,initialPos), IToken.Kind.NUM_LIT, currToken));
                 }
                 catch(NumberFormatException e) {
                     throw new LexicalException("Number is too Large");
@@ -321,16 +346,16 @@ public class MyScanner implements IScanner {
             }
             case IN_IDENT -> {
                 if (reservedWords.containsKey(currToken)){
-                    tokens.add(new MyToken(currToken, reservedWords.get(currToken), new IToken.SourceLocation(row, col)));
+                    tokens.add(new MyToken(currToken, reservedWords.get(currToken), new IToken.SourceLocation(row, initialPos)));
                 }
                 else {
-                    tokens.add(new MyToken(currToken, IToken.Kind.IDENT, new IToken.SourceLocation(row, col)));
+                    tokens.add(new MyToken(currToken, IToken.Kind.IDENT, new IToken.SourceLocation(row, initialPos)));
                 }
             }
             case IN_STRING_LIT -> {
                 //if exited forloop without reaching a " to close the string and reset the state to start,
                 //add an error
-                tokens.add(new MyToken("ERROR", IToken.Kind.ERROR, new IToken.SourceLocation(row,col)));
+                tokens.add(new MyToken("ERROR", IToken.Kind.ERROR, new IToken.SourceLocation(row,initialPos)));
             }
         }
 

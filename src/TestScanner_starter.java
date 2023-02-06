@@ -246,8 +246,8 @@ class TestScanner_starter {
 				""";
 		IScanner scanner = CompilerComponentFactory.makeScanner(input);
 		checkString(input.substring(0, 7),"hello", new SourceLocation(1,1), scanner.next());
-		checkString(input.substring(8, 11), "\t", new SourceLocation(1,1), scanner.next());
-		checkString(input.substring(12, 16), "\"",  new SourceLocation(1,1), scanner.next());
+		checkString(input.substring(8, 11), "\t", new SourceLocation(2,1), scanner.next());
+		checkString(input.substring(12, 16), "\"",  new SourceLocation(3,1), scanner.next());
 		checkEOF(scanner.next());
 	}
 
@@ -337,10 +337,6 @@ class TestScanner_starter {
 			IToken t = scanner.next();
 		});
 	}
-
-
-
-
 
 
 	@Test
