@@ -245,6 +245,9 @@ public class MyScanner implements IScanner {
                     else if ((ch >= 0 && ch <= 127) && ch != 34 && ch != 92){
                         currToken += ch;
                         stringLitVal += ch;
+                        if(ch == 10 || ch == 13) {
+                            tokens.add(new MyToken("ILLEGAL NEW LINE", IToken.Kind.ERROR, new IToken.SourceLocation(row, initialPos)));
+                        }
                     }
                     col++;
                 }
@@ -378,7 +381,11 @@ public class MyScanner implements IScanner {
             }
             else if (list_of_tokens.get(currIndex).getTokenString().equals("INVALID CHAR")) {
                 throw new LexicalException("Char is not valid");
-            } else {
+            }
+            else if(list_of_tokens.get(currIndex).getTokenString().equals("ILLEGAL NEW LINE")) {
+                throw new LexicalException("ILLEGAL NEW LINE IN STRING");
+            }
+            else {
                 throw new LexicalException("AN ERROR HAS OCCURRED");
             }
         }
