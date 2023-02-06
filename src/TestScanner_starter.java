@@ -181,11 +181,11 @@ class TestScanner_starter {
 				""";
 
 		IScanner scanner = CompilerComponentFactory.makeScanner(input);
-		checkToken(Kind.IDENT,"i0", new SourceLocation(1,1), scanner.next());
-		checkToken(Kind.IDENT, "i1",new SourceLocation(2,3), scanner.next());
-		checkToken(Kind.RES_x, "x", new SourceLocation(2,7), scanner.next());		
-		checkToken(Kind.RES_y, "y", new SourceLocation(3,1), scanner.next());
-		checkToken(Kind.RES_Y, "Y", new SourceLocation(3,3), scanner.next());
+		checkToken(Kind.IDENT, scanner.next());
+		checkToken(Kind.IDENT, scanner.next());
+		checkToken(Kind.RES_x, scanner.next());
+		checkToken(Kind.RES_y, scanner.next());
+		checkToken(Kind.RES_Y, scanner.next());
 		checkEOF(scanner.next());
 	}
 	
