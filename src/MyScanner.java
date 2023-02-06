@@ -185,6 +185,7 @@ public class MyScanner implements IScanner {
                     }
                     else {
                         //insert error token?
+                        tokens.add(new MyToken("INVALID CHAR", IToken.Kind.ERROR, new IToken.SourceLocation(row,initialPos)));
                     }
                 }
 
@@ -313,24 +314,17 @@ public class MyScanner implements IScanner {
                 }
 
                 case ESCAPE -> {
-                    try {
-                        //if (b | t | n | r | " | \)
-                        if (ch == 98 || ch == 116 || ch == 110 || ch == 114 || ch == 34 || ch == 92){
-                            currToken += ch;
-                            stringLitVal = currToken.substring(1, currToken.length() - 2);
-                            stringLitVal += (char) Integer.parseInt(escapeSeq.get(Character.toString(ch)));//corresponding escape sequence
-                            state = State.IN_STRING_LIT;
-                        }
-                        //else, error
-                        else {
-                            tokens.add(new MyToken("Illegal Escape", IToken.Kind.ERROR, new IToken.SourceLocation(row,initialPos)));
-                            throw new Exception();
-                        }
+                    //if (b | t | n | r | " | \)
+                    if (ch == 98 || ch == 116 || ch == 110 || ch == 114 || ch == 34 || ch == 92){
+                        currToken += ch;
+                        stringLitVal = currToken.substring(1, currToken.length() - 2);
+                        stringLitVal += (char) Integer.parseInt(escapeSeq.get(Character.toString(ch)));//corresponding escape sequence
+                        state = State.IN_STRING_LIT;
                     }
-                    catch(Exception e) {
-                        throw new LexicalException("Illegal Escape");
+                    //else, error
+                    else {
+                        tokens.add(new MyToken("Illegal Escape", IToken.Kind.ERROR, new IToken.SourceLocation(row,initialPos)));
                     }
-
                 }
             }
         }
@@ -373,7 +367,20 @@ public class MyScanner implements IScanner {
 
 
         if(list_of_tokens.get(currIndex).getKind().equals(IToken.Kind.ERROR)){
-            throw new LexicalException("NUM TOO LRG");
+            if (list_of_tokens.get(currIndex).getTokenString().equals("Number is larger than INT MAX")){
+                throw new LexicalException("NUM TOO LRG");
+            }
+            else if (list_of_tokens.get(currIndex).getTokenString().equals("Illegal Escape")){
+                throw new LexicalException("Escape is Illegal");
+            }
+            else if (list_of_tokens.get(currIndex).getTokenString().equals("ERROR")){
+                throw new LexicalException("UNFINISHED EXCHANGE");
+            }
+            else if (list_of_tokens.get(currIndex).getTokenString().equals("INVALID CHAR")) {
+                throw new LexicalException("Char is not valid");
+            } else {
+                throw new LexicalException("AN ERROR HAS OCCURRED");
+            }
         }
         //get current token
         IToken ret = list_of_tokens.get(currIndex);
