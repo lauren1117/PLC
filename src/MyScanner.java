@@ -140,9 +140,8 @@ public class MyScanner implements IScanner {
                         currToken += ch;
                     }
                     //else if (~) state = COMMENT
-                    else if (ch == '~'){
+                    else if (ch == '~') {
                         state = State.COMMENT;
-                        currToken += ch;
                     }
                     //else if (") state = string_lit
                     else if (ch == '"'){
@@ -158,7 +157,9 @@ public class MyScanner implements IScanner {
                         state = State.OPERATION;
                         currToken += ch;
                     }
-                    //else error or eof ??
+                    else {
+                        //insert error token?
+                    }
                 }
 
                 case IN_NUM_LIT -> {
@@ -258,6 +259,10 @@ public class MyScanner implements IScanner {
 
                 case COMMENT -> {
                     //if ascii char except lf cr
+                    if(ch == 10 || ch == 13) {
+                        state = State.START;
+                    }
+
                 }
                 case ESCAPE -> {
                     //if (b | t | n | r | " | \), what do we do????
