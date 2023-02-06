@@ -276,7 +276,15 @@ class TestScanner_starter {
 				""";
 		checkTokens(input, Kind.EXCHANGE, Kind.GT, Kind.GT, Kind.GE, Kind.LT, Kind.LE, Kind.LT, Kind.EOF);
 	}
-	
+
+	@Test
+	void LTGTEXCHANGE() throws LexicalException {
+		String input = """
+				<=>>><->><<=<<->
+				""";
+		checkTokens(input, Kind.LE, Kind.GT, Kind.GT, Kind.GT, Kind.EXCHANGE, Kind.GT,Kind.LT,Kind.LE, Kind.LT,Kind.EXCHANGE);
+	}
+
 	/** The Scanner should not backtrack so this input should throw an exception */
 	@Test
 	void incompleteExchangeThrowsException() throws LexicalException {

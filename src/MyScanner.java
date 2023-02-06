@@ -158,14 +158,8 @@ public class MyScanner implements IScanner {
                         state = State.OPERATION;
                         currToken += ch;
                     }
-
-
-
-
                     //else error or eof ??
                 }
-
-
 
                 case IN_NUM_LIT -> {
                     //if (0-9), state remain num_lit, add to currToken
@@ -186,9 +180,6 @@ public class MyScanner implements IScanner {
                     }
                 }
 
-
-
-
                 case IN_IDENT -> {
                     //if (letter | _ | number), state remains ident, add to currToken
                     //else; add new token to list, set currToken empty, set state to START, i--
@@ -207,9 +198,6 @@ public class MyScanner implements IScanner {
                     }
                 }
 
-
-
-
                 case IN_STRING_LIT -> {
                     //if input char (excluding " or \) state = string_lit
                     // if esc sequence, add to currToken, state = esc
@@ -218,25 +206,52 @@ public class MyScanner implements IScanner {
                 }
 
                 case OPERATION -> {
-                    if (currToken == "<" && ch == '='){
-                        currToken += ch;
-                        tokens.add(new MyToken(currToken, opMultiChar.get(currToken), new IToken.SourceLocation(row,col)));
+                    if (currToken.equals("<")){
+                        if (ch == '='){
+                            currToken += ch;
+                            tokens.add(new MyToken(currToken, opMultiChar.get(currToken), new IToken.SourceLocation(row,col)));
+                        }
+                        else if (ch == '-') {
+                            currToken += ch;
+                            state = State.IN_EXCHANGE;
+                            break;
+                        }
+                        else {
+                            //single-char op
+                            tokens.add(new MyToken(currToken, opInitial.get(currToken), new IToken.SourceLocation(row,col)));
+                            i--;
+                        }
                     }
-                    else if(currToken == "<" && ch == '-'){
-                        state = State.IN_EXCHANGE;
-                        break;
-                    }
-                    else if (currToken == ">" && ch == '='){
-                        currToken += ch;
-                        tokens.add(new MyToken(currToken, opMultiChar.get(currToken), new IToken.SourceLocation(row,col)));
+                    else if (currToken.equals(">")){
+                        if (ch == '='){
+                            currToken += ch;
+                            tokens.add(new MyToken(currToken, opMultiChar.get(currToken), new IToken.SourceLocation(row,col)));
+                        }
+                        else {
+                            //single-char op
+                            tokens.add(new MyToken(currToken, opInitial.get(currToken), new IToken.SourceLocation(row,col)));
+                            i--;
+                        }
                     }
                     else if (currToken.equals(Character.toString(ch))){
                         currToken += ch;
                         tokens.add(new MyToken(currToken, opMultiChar.get(currToken), new IToken.SourceLocation(row,col)));
                     }
                     else {
-                        //ERROR??
+                        //single-char op
                         tokens.add(new MyToken(currToken, opInitial.get(currToken), new IToken.SourceLocation(row,col)));
+                        i--;
+                    }
+                    state = State.START;
+                }
+
+                case IN_EXCHANGE -> {
+                    if (ch == '>'){
+                        currToken += ch;
+                        tokens.add(new MyToken(currToken, IToken.Kind.EXCHANGE, new IToken.SourceLocation(row, col)));
+                    }
+                    else{
+                        tokens.add(new MyToken("ERROR", IToken.Kind.ERROR, new IToken.SourceLocation(row,col)));
                     }
                     state = State.START;
                 }
