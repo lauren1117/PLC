@@ -15,5 +15,10 @@ public class CompilerComponentFactory {
 		//Add statement to return an instance of your scanner
 		return new MyScanner(input);
 	}
+	public static IParser makeAssignment2Parser(String input) throws PLCException {
+		//add code to create a scanner and parser and return the parser.
+		return new MyParser(input);
+	}
+
 
 }

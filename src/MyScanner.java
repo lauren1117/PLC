@@ -395,4 +395,9 @@ public class MyScanner implements IScanner {
         return ret;
     }
 
+    @Override
+    public ArrayList<IToken> getTokenList() {
+        return list_of_tokens;
+    }
+
 }
