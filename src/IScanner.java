@@ -10,6 +10,8 @@
 
 package edu.ufl.cise.plcsp23;
 
+import java.util.ArrayList;
+
 public interface IScanner {
 	/**
 	 * Return an IToken and advance the internal position so that subsequent calls
@@ -19,6 +21,7 @@ public interface IScanner {
 	 * @throws LexicalException
 	 */
 	IToken next() throws LexicalException;
+	ArrayList<IToken> getTokenList();
 
 }
 
