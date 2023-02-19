@@ -82,10 +82,17 @@ public class MyParser implements IParser {
         return expr1;
     }
 
-    //<power_expr> ::=  <additive_expr> ** <power_expr> |  <additive_expr>
+    //<power_expr> ::=  <additive_expr> [(**(power_expr)) | empty_set]
     Expr powerExpr()
     {
-        return additiveExpr();
+        IToken first = peek();
+
+        Expr expr1 = additiveExpr();
+        if(match(IToken.Kind.EXP)) {
+            Expr expr2 = powerExpr();
+            expr1 = new BinaryExpr(first, expr1, IToken.Kind.EXP, expr2);
+        }
+        return expr1;
     }
 
     //<additive_expr> ::= <multiplicative_expr> ( ( + | - ) <multiplicative_expr> )*

@@ -250,4 +250,15 @@ class TestScanner_starter {
 		});
 	}
 
+	@Test
+	void stringEscape() throws LexicalException {
+		String input = """
+    			"\\b \\t \\n \\r \\" \\\\"
+				""";
+		IScanner scanner = CompilerComponentFactory.makeScanner(input);
+		assertThrows(LexicalException.class, () -> {
+			scanner.next();
+		});
+	}
+
 }

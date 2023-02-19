@@ -274,4 +274,19 @@ if if 3 ? 4 ? 5 ? if 6 ? 7 ? 8 ? if 9 ? 10 ? 11
 			getAST(input);
 		});
 	}
-}
+
+	@Test
+	void power1() throws PLCException {
+		String input = "3**4";
+		BinaryExpr be = checkBinary(getAST(input), Kind.EXP);
+		checkNumLit(be.getLeft(), 3);
+		checkNumLit(be.getRight(), 4);
+	}
+
+	@Test
+	void power2() throws PLCException {
+		String input = "3**4";
+		BinaryExpr be = checkBinary(getAST(input), Kind.EXP);
+		checkNumLit(be.getLeft(), 3);
+		checkNumLit(be.getRight(), 4);
+	}}
