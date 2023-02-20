@@ -346,14 +346,6 @@ class Assignment2Test_starter {
 	}
 
 	@Test
-	void andDeepParentheses1() throws PLCException { // Ask if this should throw an exception
-		String input = " ((o)(o)) ";
-		AST e = getAST(input);
-		checkIdent(e, "o");
-		checkIdent(e, "o");
-	}
-
-	@Test
 	void andUnaryChain() throws PLCException {
 		String input = " !-atan!--!!cos sin love";
 		UnaryExpr u1 = checkUnary(getAST(input), Kind.BANG);
