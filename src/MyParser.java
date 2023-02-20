@@ -14,7 +14,7 @@ public class MyParser implements IParser {
         IScanner scanner = CompilerComponentFactory.makeScanner(input);
         tokens = scanner.getTokenList();
         if(tokens.size() == 0) {
-            //TODO: Throw Error ============================================
+            throw new SyntaxException("EMPTY PROGRAM");
         }
     }
 
