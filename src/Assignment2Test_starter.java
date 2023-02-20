@@ -396,7 +396,7 @@ if if 3 ? 4 ? 5 ? if 6 ? 7 ? 8 ? if 9 ? 10 ? 11
 
 	@Test
 	void badParentheses() throws PLCException {
-		String input = " (oh ";
+		String input = " (((oh)) ";
 		assertThrows(SyntaxException.class, () -> {
 			getAST(input);
 		});

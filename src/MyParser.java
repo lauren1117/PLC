@@ -166,7 +166,7 @@ public class MyParser implements IParser {
     //================ UTILITY FUNCTIONS ==================//
 
     //determines whether current token type is in the provided set of token types
-    boolean match(IToken.Kind ... kinds) {
+    boolean match(IToken.Kind ... kinds) throws LexicalException {
         if(currIndex > tokens.size() - 1) {
             return false;
         }
@@ -180,14 +180,17 @@ public class MyParser implements IParser {
     }
 
     //checks whether current token type matches the provided type
-    boolean check(IToken.Kind k) {
+    boolean check(IToken.Kind k) throws LexicalException {
         if(currIndex > tokens.size() - 1) {
             return false;
         }
         return peek().getKind() == k;
     }
 
-    IToken consume(IToken.Kind k, String message) throws SyntaxException {
+    IToken consume(IToken.Kind k, String message) throws SyntaxException, LexicalException {
+        if (currIndex > tokens.size() - 1){
+            throw new SyntaxException(message);
+        }
         if (check(k)) {
             return advance();
         }
@@ -196,7 +199,7 @@ public class MyParser implements IParser {
 
     //increments the current index if end of list has not been reached
     IToken advance() {
-        if(currIndex < tokens.size() - 1) {
+        if(currIndex <= tokens.size() - 1) {
             currIndex++;
         }
         return previous();
@@ -211,8 +214,12 @@ public class MyParser implements IParser {
     }
 
     //gets the token at the current index
-    IToken peek() {
-        return tokens.get(currIndex);
+    IToken peek() throws LexicalException {
+        IToken currToken = tokens.get(currIndex);
+        if (currToken.getKind() == IToken.Kind.ERROR){
+            throw new LexicalException(currToken.getTokenString());
+        }
+        return currToken;
     }
 
 }
