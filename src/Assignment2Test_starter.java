@@ -394,4 +394,12 @@ if if 3 ? 4 ? 5 ? if 6 ? 7 ? 8 ? if 9 ? 10 ? 11
 		checkIdent(cfr.getE(), "together");
 	}
 
+	@Test
+	void badParentheses() throws PLCException {
+		String input = " (oh ";
+		assertThrows(SyntaxException.class, () -> {
+			getAST(input);
+		});
+	}
+
 }
