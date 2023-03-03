@@ -63,8 +63,8 @@ class Assignment2Test_starter {
 
 	/**
 	 *  Checks that the given AST e has type StringLitExpr with the given String value.  Returns the given AST cast to StringLitExpr.
-	 * @param /e
-	 * @param\name
+	 * @param //e
+	 * @param //name
 	 * @return
 	 */
 	StringLitExpr checkStringLit(AST e, String value) {
@@ -100,8 +100,8 @@ class Assignment2Test_starter {
 	/**
 	 *  Checks that the given AST e has type BinaryExpr with the given operator.  Returns the given AST cast to BinaryExpr.
 	 *
-	 * @parame
-	 * @paramop  Kind of expected operator
+	 * @param e
+	 * @param //op  Kind of expected operator
 	 * @return
 	 */
 	BinaryExpr checkBinary(AST e, Kind expectedOp) {
@@ -343,14 +343,6 @@ class Assignment2Test_starter {
 		String input = " ((((((((1)))))))) ";
 		AST e = getAST(input);
 		checkNumLit(e, 1);
-	}
-
-	@Test
-	void andDeepParentheses1() throws PLCException { // Ask if this should throw an exception
-		String input = " ((o)(o)) ";
-		AST e = getAST(input);
-		checkIdent(e, "o");
-		checkIdent(e, "o");
 	}
 
 	@Test

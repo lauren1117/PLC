@@ -11,7 +11,7 @@ public class MyParser implements IParser {
 
     //constructor ---- creates scanner obj from input and gets resulting array of tokens
     public MyParser(String input) throws PLCException {
-        IScanner scanner = CompilerComponentFactory.makeScanner(input);
+        MyScanner scanner = (MyScanner) CompilerComponentFactory.makeScanner(input);
         tokens = scanner.getTokenList();
         if(tokens.size() == 0) {
             throw new SyntaxException("EMPTY PROGRAM");
@@ -85,8 +85,8 @@ public class MyParser implements IParser {
     //<power_expr> ::=  <additive_expr> [(**(power_expr)) | empty_set]
     Expr powerExpr() throws PLCException {
         IToken first = peek();
-
         Expr expr2 = additiveExpr();
+
         if(match(IToken.Kind.EXP)) {
             Expr expr1 = powerExpr();
             expr2 = new BinaryExpr(first, expr2, IToken.Kind.EXP, expr1);

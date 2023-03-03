@@ -7,7 +7,7 @@ import static java.lang.Character.*;
 //import static java.lang.Character.isDigit;
 
 public class MyScanner implements IScanner {
-    ArrayList<IToken> list_of_tokens;
+    public ArrayList<IToken> list_of_tokens;
     int currIndex = 0;
 
     public static HashMap<String, IToken.Kind> reservedWords = new HashMap<String, IToken.Kind>() {{
@@ -395,7 +395,6 @@ public class MyScanner implements IScanner {
         return ret;
     }
 
-    @Override
     public ArrayList<IToken> getTokenList() {
         return list_of_tokens;
     }
