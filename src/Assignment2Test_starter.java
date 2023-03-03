@@ -63,8 +63,8 @@ class Assignment2Test_starter {
 
 	/**
 	 *  Checks that the given AST e has type StringLitExpr with the given String value.  Returns the given AST cast to StringLitExpr.
-	 * @param /e
-	 * @param\name
+	 * @param //e
+	 * @param //name
 	 * @return
 	 */
 	StringLitExpr checkStringLit(AST e, String value) {
@@ -100,8 +100,8 @@ class Assignment2Test_starter {
 	/**
 	 *  Checks that the given AST e has type BinaryExpr with the given operator.  Returns the given AST cast to BinaryExpr.
 	 *
-	 * @parame
-	 * @paramop  Kind of expected operator
+	 * @param e
+	 * @param //op  Kind of expected operator
 	 * @return
 	 */
 	BinaryExpr checkBinary(AST e, Kind expectedOp) {
