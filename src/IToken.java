@@ -24,6 +24,9 @@ public interface IToken {
 		//==============RESERVED=============//
 		RES_image,
 		RES_pixel,
+		RES_red,
+		RES_grn,
+		RES_blu,
 		RES_int,
 		RES_string,
 		RES_void,
