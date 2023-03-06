@@ -24,6 +24,34 @@ public class MyParser implements IParser {
         return expression();
     }
 
+    //<program> ::= <type> IDENT (ParamList) Block
+    Expr Program() throws PLCException {
+
+    }
+
+    //<Block> ::= {DecList StatementList}
+    Expr Block() throws PLCException {
+
+    }
+
+    //<DecList> ::= (Declaration.)*
+    Expr DecList() throws PLCException{}
+
+    //<StatementList> ::= (Statement.)*
+    Expr StatementList() throws PLCException{}
+
+    //<ParamList> ::= e | NameDef (,NameDef)*
+    Expr ParamList() throws PLCException {}
+
+    //<NameDef> ::= Type (IDENT | Dimension IDENT)
+    Expr NameDef() throws PLCException {}
+
+    //<Type> ::= image | pixel | int | string | void
+    Expr Type() throws PLCException {}
+
+    //<Declaration> ::= NAmeDef (e | = Expr)
+    Expr Declaration() throws PLCException {}
+
     //<expr> ::= <conditional_expr> | <or_expr>
     Expr expression() throws PLCException {
         if(peek().getKind() == IToken.Kind.RES_if) {
@@ -118,7 +146,7 @@ public class MyParser implements IParser {
         return expr1;
     }
 
-    //<unary_expr> ::= ( ! | - | sin | cos | atan) <unary_expr> | <primary_expr>
+    //<unary_expr> ::= ( ! | - | sin | cos | atan) <unary_expr> | <unaryExprPostfix>
     Expr unaryExpr() throws PLCException {
         IToken first = peek();
         if(match(IToken.Kind.BANG, IToken.Kind.MINUS, IToken.Kind.RES_sin, IToken.Kind.RES_cos, IToken.Kind.RES_atan)) {
@@ -128,6 +156,9 @@ public class MyParser implements IParser {
         }
         return primaryExpr();
     }
+
+    //<UnaryExprPostfix> ::= <primaryExpr> (<PixelSelector> | e)(<ChannelSelector> | e)
+    Expr UnaryExprPostfix() throws PLCException {}
 
     //<primary_expr> ::= STRING_LIT | NUM_LIT | IDENT | ( <expr> ) | Z | rand
     Expr primaryExpr() throws PLCException {
@@ -147,6 +178,9 @@ public class MyParser implements IParser {
         else if (k == IToken.Kind.RES_Z) {
             return new ZExpr(first);
         }
+        else if (k == IToken.Kind.RES_x || k == IToken.Kind.RES_y || k == IToken.Kind.RES_a || k == IToken.Kind.RES_r) {
+            return new PredeclaredVarExpr(first);
+        }
         else if (k == IToken.Kind.RES_rand) {
             return new RandomExpr(first);
         }
@@ -155,10 +189,17 @@ public class MyParser implements IParser {
             consume(IToken.Kind.RPAREN, "Right parenthesis expected");
             return expr;
         }
+        else if (k == IToken.Kind.LSQUARE) {
+            return ExpandedPixel();
+        }
         else if (k == IToken.Kind.ERROR) {
             throw new LexicalException("Invalid token");
         }
         throw new SyntaxException("Unexpected token");
+    }
+
+    Expr ExpandedPixel() throws PLCException {
+
     }
 
 
