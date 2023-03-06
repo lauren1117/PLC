@@ -21,7 +21,6 @@ public class CompilerComponentFactory {
 	}
 
 	public static IParser makeParser(String input) throws PLCException {
-		//add code to create a scanner and parser and return the parser.
 		return new MyParser(input);
 	}
 
