@@ -83,7 +83,7 @@ class Assignment3Test_starter {
 	/**
 	 * Checks that the given AST e has type StringLitExpr with the given String
 	 * value. Returns the given AST cast to StringLitExpr.
-	 * 
+	 *
 	 * @param e
 	 * @return
 	 */
@@ -97,7 +97,7 @@ class Assignment3Test_starter {
 	/**
 	 * Checks that the given AST e has type UnaryExpr with the given operator.
 	 * Returns the given AST cast to UnaryExpr.
-	 * 
+	 *
 	 * @param e
 	 * @param op Kind of expected operator
 	 * @return
@@ -111,7 +111,7 @@ class Assignment3Test_starter {
 	/**
 	 * Checks that the given AST e has type ConditionalExpr. Returns the given AST
 	 * cast to ConditionalExpr.
-	 * 
+	 *
 	 * @param e
 	 * @return
 	 */
@@ -137,7 +137,7 @@ class Assignment3Test_starter {
 	/**
 	 * Checks that the given AST e has type IdentExpr with the given name. Returns
 	 * the given AST cast to IdentExpr.
-	 * 
+	 *
 	 * @param e
 	 * @param name
 	 * @return
@@ -152,7 +152,7 @@ class Assignment3Test_starter {
 	/**
 	 * Checks that the given AST e has type Ident with the given name. Returns the
 	 * given AST cast to IdentExpr.
-	 * 
+	 *
 	 * @param e
 	 * @param name
 	 * @return
@@ -934,4 +934,29 @@ class Assignment3Test_starter {
 		});
 	}
 
+
+	@Test
+	void test15() throws PLCException {
+		String input = """
+				 string s(){
+				 xx = 22
+				 }
+				 """;
+		assertThrows(SyntaxException.class, () -> {
+			@SuppressWarnings("unused")
+			AST ast = getAST(input);
+		});
+	}
+	@Test
+	void test16() throws PLCException {
+		String input = """
+				 int s(){
+				 xx = 22;
+				 }
+				 """;
+		assertThrows(LexicalException.class, () -> {
+			@SuppressWarnings("unused")
+			AST ast = getAST(input);
+		});
+	}
 }
