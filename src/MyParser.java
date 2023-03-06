@@ -160,6 +160,7 @@ public class MyParser implements IParser {
     //<UnaryExprPostfix> ::= <primaryExpr> (<PixelSelector> | e)(<ChannelSelector> | e)
     Expr UnaryExprPostfix() throws PLCException {}
 
+
     //<primary_expr> ::= STRING_LIT | NUM_LIT | IDENT | ( <expr> ) | Z | rand
     Expr primaryExpr() throws PLCException {
         IToken first = peek();
@@ -198,10 +199,31 @@ public class MyParser implements IParser {
         throw new SyntaxException("Unexpected token");
     }
 
+    //<channelSelector> ::= :red | :grn | :blu
+    Expr ChannelSelector() throws PLCException {
+
+
+    }
+
+    //PixelSelector ::= [ Expr , Expr ]
+    Expr PixelSelector() throws PLCException {}
+
+    //ExpandedPixel ::= [ Expr, Expr, Expr ]
     Expr ExpandedPixel() throws PLCException {
 
     }
 
+    //PixelFunctionExpr ::= (x_cart | y_cart | a_polar | r_polar) PixelSelector
+    Expr PixelFunctionExpr() throws PLCException {}
+
+    //Dimension ::= [ Expr, Expr ]
+    Expr Dimension() throws PLCException {}
+
+    //LValue ::= IDENT (PixelSelector | e) (ChannelSelector | e)
+    Expr LValue() throws PLCException {}
+
+    // Statement ::= LValue = Expr | write Expr | while Expr Block
+    Expr Statement() throws PLCException {}
 
     //================ UTILITY FUNCTIONS ==================//
 
