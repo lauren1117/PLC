@@ -20,5 +20,8 @@ public class CompilerComponentFactory {
 		return new MyParser(input);
 	}
 
+	public static IParser makeParser(String input) throws PLCException {
+		return new MyParser(input);
+	}
 
 }
