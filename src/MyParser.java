@@ -158,7 +158,6 @@ public class MyParser implements IParser {
         else if (k == IToken.Kind.ERROR) {
             throw new LexicalException("Invalid token");
         }
-        //TODO: Throw Error===============================
         throw new SyntaxException("Unexpected token");
     }
 
@@ -166,7 +165,7 @@ public class MyParser implements IParser {
     //================ UTILITY FUNCTIONS ==================//
 
     //determines whether current token type is in the provided set of token types
-    boolean match(IToken.Kind ... kinds) throws LexicalException {
+    boolean match(IToken.Kind ... kinds) throws PLCException {
         if(currIndex > tokens.size() - 1) {
             return false;
         }
@@ -180,14 +179,14 @@ public class MyParser implements IParser {
     }
 
     //checks whether current token type matches the provided type
-    boolean check(IToken.Kind k) throws LexicalException {
+    boolean check(IToken.Kind k) throws PLCException {
         if(currIndex > tokens.size() - 1) {
             return false;
         }
         return peek().getKind() == k;
     }
 
-    IToken consume(IToken.Kind k, String message) throws SyntaxException, LexicalException {
+    IToken consume(IToken.Kind k, String message) throws PLCException {
         if (currIndex > tokens.size() - 1){
             throw new SyntaxException(message);
         }
@@ -214,7 +213,10 @@ public class MyParser implements IParser {
     }
 
     //gets the token at the current index
-    IToken peek() throws LexicalException {
+    IToken peek() throws PLCException {
+        if(currIndex > tokens.size() - 1) {
+            throw new SyntaxException("bad");
+        }
         IToken currToken = tokens.get(currIndex);
         if (currToken.getKind() == IToken.Kind.ERROR){
             throw new LexicalException(currToken.getTokenString());
