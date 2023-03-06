@@ -85,7 +85,11 @@ class Assignment3Test_starter {
 	 * value. Returns the given AST cast to StringLitExpr.
 	 * 
 	 * @param e
+<<<<<<< HEAD
 	 * @param name
+=======
+	 * @param //name
+>>>>>>> 9cb547f796f7b583876e6fa2220cb4976220f028
 	 * @return
 	 */
 	StringLitExpr checkStringLit(AST e, String value) {
@@ -126,7 +130,11 @@ class Assignment3Test_starter {
 	 * Returns the given AST cast to BinaryExpr.
 	 *
 	 * @param e
+<<<<<<< HEAD
 	 * @param op Kind of expected operator
+=======
+	 * @param expectedOp Kind of expected operator
+>>>>>>> 9cb547f796f7b583876e6fa2220cb4976220f028
 	 * @return
 	 */
 	BinaryExpr checkBinary(AST e, Kind expectedOp) {
