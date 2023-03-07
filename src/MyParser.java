@@ -250,6 +250,12 @@ public class MyParser implements IParser {
         IToken color = null;
         if(match(IToken.Kind.COLON)) {
             color = advance();
+            try {
+                ColorChannel.getColor(color);
+            }
+            catch(RuntimeException r) {
+                throw new SyntaxException("Invalid color");
+            }
         }
 
         if(color == null && pix == null) {
@@ -362,6 +368,12 @@ public class MyParser implements IParser {
         IToken color = null;
         if(match(IToken.Kind.COLON)) {
             color = peek();
+            try {
+                ColorChannel.getColor(color);
+            }
+            catch(RuntimeException r) {
+                throw new SyntaxException("Invalid color");
+            }
         }
         ColorChannel col = (color == null) ? null : ColorChannel.getColor(color);
         return new LValue(first, id, pix, col);
