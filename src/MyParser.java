@@ -38,7 +38,7 @@ public class MyParser implements IParser {
         Ident id = new Ident(consume(IToken.Kind.IDENT, "Ident expected"));
 
         consume(IToken.Kind.LPAREN, "Left parentheses expected");
-        List<NameDef> params = null;
+        List<NameDef> params = ParamList();
         //TODO========== Return list of name def arguments
         consume(IToken.Kind.RPAREN, "Right parentheses expected");
 
@@ -52,28 +52,52 @@ public class MyParser implements IParser {
         IToken first = peek();
 
         consume(IToken.Kind.LCURLY, "Left curly expected");
-        List<Declaration> decList = null;
-        List<Statement> statementList = null;
+        List<Declaration> decList = DecList();
+        List<Statement> statementList = StatementList();
         consume(IToken.Kind.RCURLY, "Right curly expected");
 
         return new Block(first, decList, statementList);
     }
 
     //<DecList> ::= (Declaration.)*
-    AST DecList() throws PLCException
+    List<Declaration> DecList() throws PLCException
     {
-        return null;
+        ArrayList<Declaration> decs = new ArrayList<Declaration>();
+        while(match(IToken.Kind.RES_image, IToken.Kind.RES_pixel, IToken.Kind.RES_int, IToken.Kind.RES_string, IToken.Kind.RES_void)) {
+            currIndex--;
+            Declaration dec = Declaration();
+            consume(IToken.Kind.DOT, "Dot expected");
+            decs.add(dec);
+        }
+        return decs;
     }
 
     //<StatementList> ::= (Statement.)*
-    AST StatementList() throws PLCException
+    List<Statement> StatementList() throws PLCException
     {
-        return null;
+        ArrayList<Statement> statements = new ArrayList<Statement>();
+        while(match(IToken.Kind.IDENT, IToken.Kind.RES_write, IToken.Kind.RES_while)) {
+            currIndex--;
+            Statement statement = Statement();
+            consume(IToken.Kind.DOT, "Dot expected");
+            statements.add(statement);
+        }
+        return statements;
     }
 
     //<ParamList> ::= e | NameDef (,NameDef)*
-    AST ParamList() throws PLCException {
-        return null;
+    List<NameDef> ParamList() throws PLCException {
+        ArrayList<NameDef> params = new ArrayList<NameDef>();
+        if(match(IToken.Kind.RES_image, IToken.Kind.RES_pixel, IToken.Kind.RES_int, IToken.Kind.RES_string, IToken.Kind.RES_void)){
+            NameDef name = NameDef();
+            params.add(name);
+            while(match(IToken.Kind.COMMA))
+            {
+                name = NameDef();
+                params.add(name);
+            }
+        }
+        return params;
     }
 
     //<NameDef> ::= Type (IDENT | Dimension IDENT)
@@ -94,7 +118,7 @@ public class MyParser implements IParser {
 
 
     //<Declaration> ::= NameDef (e | = Expr)
-    AST Declaration() throws PLCException
+    Declaration Declaration() throws PLCException
     {
         IToken first = peek();
         NameDef name = NameDef();
@@ -329,7 +353,7 @@ public class MyParser implements IParser {
     }
 
     // Statement ::= LValue = Expr | write Expr | while Expr Block
-    AST Statement() throws PLCException
+    Statement Statement() throws PLCException
     {
         IToken first = peek();
         if(match(IToken.Kind.RES_write)){
@@ -377,6 +401,9 @@ public class MyParser implements IParser {
         if (currIndex > tokens.size() - 1){
             throw new SyntaxException(message);
         }
+        if(tokens.get(currIndex).getKind() == IToken.Kind.ERROR) {
+            throw new LexicalException("Invalid token");
+        }
         if (check(k)) {
             return advance();
         }
@@ -384,9 +411,12 @@ public class MyParser implements IParser {
     }
 
     //increments the current index if end of list has not been reached
-    IToken advance() {
+    IToken advance() throws LexicalException {
         if(currIndex <= tokens.size() - 1) {
             currIndex++;
+        }
+        if (previous().getKind() == IToken.Kind.ERROR){
+            throw new LexicalException(previous().getTokenString());
         }
         return previous();
     }
