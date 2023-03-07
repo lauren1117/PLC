@@ -232,7 +232,8 @@ public class MyParser implements IParser {
             Expr right = unaryExpr();
             return new UnaryExpr(first, operator.getKind(), right);
         }
-        return primaryExpr();
+
+        return UnaryExprPostfix();
     }
 
     //<UnaryExprPostfix> ::= <primaryExpr> (<PixelSelector> | e)(<ChannelSelector> | e)
@@ -247,6 +248,10 @@ public class MyParser implements IParser {
         IToken color = null;
         if(match(IToken.Kind.COLON)) {
             color = peek();
+        }
+
+        if(color == null && pix == null) {
+            return primExp;
         }
         ColorChannel col = (color == null) ? null : ColorChannel.getColor(color);
         return new UnaryExprPostfix(first, primExp, pix, col);
