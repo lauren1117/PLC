@@ -89,6 +89,7 @@ public class MyParser implements IParser {
     List<NameDef> ParamList() throws PLCException {
         ArrayList<NameDef> params = new ArrayList<NameDef>();
         if(match(IToken.Kind.RES_image, IToken.Kind.RES_pixel, IToken.Kind.RES_int, IToken.Kind.RES_string, IToken.Kind.RES_void)){
+            currIndex--;
             NameDef name = NameDef();
             params.add(name);
             while(match(IToken.Kind.COMMA))
@@ -247,7 +248,8 @@ public class MyParser implements IParser {
         if(match(IToken.Kind.COLON)) {
             color = peek();
         }
-        return new UnaryExprPostfix(first, primExp, pix, ColorChannel.getColor(color));
+        ColorChannel col = (color == null) ? null : ColorChannel.getColor(color);
+        return new UnaryExprPostfix(first, primExp, pix, col);
     }
 
 
@@ -296,7 +298,7 @@ public class MyParser implements IParser {
     //PixelSelector ::= [ Expr , Expr ]
     PixelSelector PixelSelector() throws PLCException
     {
-        IToken first = advance();
+        IToken first = peek();
         Expr expr1 = expression();
         consume(IToken.Kind.COMMA, "Comma expected");
         Expr expr2 = expression();
@@ -349,7 +351,8 @@ public class MyParser implements IParser {
         if(match(IToken.Kind.COLON)) {
             color = peek();
         }
-        return new LValue(first, id, pix, ColorChannel.getColor(color));
+        ColorChannel col = (color == null) ? null : ColorChannel.getColor(color);
+        return new LValue(first, id, pix, col);
     }
 
     // Statement ::= LValue = Expr | write Expr | while Expr Block
