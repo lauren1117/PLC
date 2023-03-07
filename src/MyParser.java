@@ -2,7 +2,9 @@ package edu.ufl.cise.plcsp23;
 
 import edu.ufl.cise.plcsp23.ast.*;
 
+import java.beans.Expression;
 import java.util.ArrayList;
+import java.util.List;
 
 public class MyParser implements IParser {
 
@@ -21,36 +23,87 @@ public class MyParser implements IParser {
     //where recursive descent is implemented
     @Override
     public AST parse() throws PLCException {
-        return expression();
+        return Program();
     }
 
     //<program> ::= <type> IDENT (ParamList) Block
-    Expr Program() throws PLCException {
+    AST Program() throws PLCException {
+        IToken first = advance();
+        try {
+            Type.getType(first);
+        }
+        catch(RuntimeException r) {
+            throw new SyntaxException("Invalid Type");
+        }
+        Ident id = new Ident(consume(IToken.Kind.IDENT, "Ident expected"));
 
+        consume(IToken.Kind.LPAREN, "Left parentheses expected");
+        List<NameDef> params = null;
+        //TODO========== Return list of name def arguments
+        consume(IToken.Kind.RPAREN, "Right parentheses expected");
+
+        Block block = Block();
+
+        return new Program(first, Type.getType(first), id, params, block);
     }
 
     //<Block> ::= {DecList StatementList}
-    Expr Block() throws PLCException {
+    Block Block() throws PLCException {
+        IToken first = peek();
 
+        consume(IToken.Kind.LCURLY, "Left curly expected");
+        List<Declaration> decList = null;
+        List<Statement> statementList = null;
+        consume(IToken.Kind.RCURLY, "Right curly expected");
+
+        return new Block(first, decList, statementList);
     }
 
     //<DecList> ::= (Declaration.)*
-    Expr DecList() throws PLCException{}
+    AST DecList() throws PLCException
+    {
+        return null;
+    }
 
     //<StatementList> ::= (Statement.)*
-    Expr StatementList() throws PLCException{}
+    AST StatementList() throws PLCException
+    {
+        return null;
+    }
 
     //<ParamList> ::= e | NameDef (,NameDef)*
-    Expr ParamList() throws PLCException {}
+    AST ParamList() throws PLCException {
+        return null;
+    }
 
     //<NameDef> ::= Type (IDENT | Dimension IDENT)
-    Expr NameDef() throws PLCException {}
+    NameDef NameDef() throws PLCException
+    {
+        IToken first = advance();
+        Dimension dimension = null;
+        Ident id = null;
+        if(match(IToken.Kind.IDENT)) {
+            id = new Ident(previous());
+        }
+        else {
+            dimension = Dimension();
+            id = new Ident(consume(IToken.Kind.IDENT, "Ident expected"));
+        }
+        return new NameDef(first, Type.getType(first), dimension, id);
+    }
 
-    //<Type> ::= image | pixel | int | string | void
-    Expr Type() throws PLCException {}
 
-    //<Declaration> ::= NAmeDef (e | = Expr)
-    Expr Declaration() throws PLCException {}
+    //<Declaration> ::= NameDef (e | = Expr)
+    AST Declaration() throws PLCException
+    {
+        IToken first = peek();
+        NameDef name = NameDef();
+        Expr exp = null;
+        if(match(IToken.Kind.ASSIGN)) {
+            exp = expression();
+        }
+        return new Declaration(first, name, exp);
+    }
 
     //<expr> ::= <conditional_expr> | <or_expr>
     Expr expression() throws PLCException {
@@ -158,7 +211,20 @@ public class MyParser implements IParser {
     }
 
     //<UnaryExprPostfix> ::= <primaryExpr> (<PixelSelector> | e)(<ChannelSelector> | e)
-    Expr UnaryExprPostfix() throws PLCException {}
+    Expr UnaryExprPostfix() throws PLCException
+    {
+        IToken first = peek();
+        Expr primExp = primaryExpr();
+        PixelSelector pix = null;
+        if(match(IToken.Kind.LSQUARE)) {
+            pix = PixelSelector();
+        }
+        IToken color = null;
+        if(match(IToken.Kind.COLON)) {
+            color = peek();
+        }
+        return new UnaryExprPostfix(first, primExp, pix, ColorChannel.getColor(color));
+    }
 
 
     //<primary_expr> ::= STRING_LIT | NUM_LIT | IDENT | ( <expr> ) | Z | rand
@@ -193,37 +259,95 @@ public class MyParser implements IParser {
         else if (k == IToken.Kind.LSQUARE) {
             return ExpandedPixel();
         }
+        else if (k == IToken.Kind.RES_x_cart || k == IToken.Kind.RES_y_cart || k == IToken.Kind.RES_a_polar || k == IToken.Kind.RES_r_polar){
+            return PixelFunctionExpr();
+        }
         else if (k == IToken.Kind.ERROR) {
             throw new LexicalException("Invalid token");
         }
         throw new SyntaxException("Unexpected token");
     }
 
-    //<channelSelector> ::= :red | :grn | :blu
-    Expr ChannelSelector() throws PLCException {
-
-
-    }
 
     //PixelSelector ::= [ Expr , Expr ]
-    Expr PixelSelector() throws PLCException {}
+    PixelSelector PixelSelector() throws PLCException
+    {
+        IToken first = advance();
+        Expr expr1 = expression();
+        consume(IToken.Kind.COMMA, "Comma expected");
+        Expr expr2 = expression();
+        consume(IToken.Kind.RSQUARE, "Right square expected");
+        return new PixelSelector(first, expr1, expr2);
+    }
 
     //ExpandedPixel ::= [ Expr, Expr, Expr ]
     Expr ExpandedPixel() throws PLCException {
-
+        IToken first = previous();
+        Expr expr1 = expression();
+        consume(IToken.Kind.COMMA, "Comma expected");
+        Expr expr2 = expression();
+        consume(IToken.Kind.COMMA, "Comma expected");
+        Expr expr3 = expression();
+        consume(IToken.Kind.RSQUARE, "Right square expected");
+        return new ExpandedPixelExpr(first, expr1, expr2, expr3);
     }
 
     //PixelFunctionExpr ::= (x_cart | y_cart | a_polar | r_polar) PixelSelector
-    Expr PixelFunctionExpr() throws PLCException {}
+    Expr PixelFunctionExpr() throws PLCException
+    {
+        IToken first = previous();
+        PixelSelector pixSelect = PixelSelector();
+        return new PixelFuncExpr(first, first.getKind(), pixSelect);
+    }
 
     //Dimension ::= [ Expr, Expr ]
-    Expr Dimension() throws PLCException {}
+    Dimension Dimension() throws PLCException
+    {
+        IToken first = advance();
+        Expr expr1 = expression();
+        consume(IToken.Kind.COMMA, "Comma expected");
+        Expr expr2 = expression();
+        consume(IToken.Kind.RSQUARE, "Right square expected");
+        return new Dimension(first, expr1, expr2);
+    }
 
     //LValue ::= IDENT (PixelSelector | e) (ChannelSelector | e)
-    Expr LValue() throws PLCException {}
+    LValue LValue() throws PLCException
+    {
+        IToken first = peek();
+        Ident id = new Ident(consume(IToken.Kind.IDENT, "Ident expected"));
+
+        PixelSelector pix = null;
+        if(match(IToken.Kind.LSQUARE)) {
+            pix = PixelSelector();
+        }
+        IToken color = null;
+        if(match(IToken.Kind.COLON)) {
+            color = peek();
+        }
+        return new LValue(first, id, pix, ColorChannel.getColor(color));
+    }
 
     // Statement ::= LValue = Expr | write Expr | while Expr Block
-    Expr Statement() throws PLCException {}
+    AST Statement() throws PLCException
+    {
+        IToken first = peek();
+        if(match(IToken.Kind.RES_write)){
+            Expr exp = expression();
+            return new WriteStatement(first, exp);
+        }
+        else if(match(IToken.Kind.RES_while)) {
+            Expr exp = expression();
+            Block block = Block();
+            return new WhileStatement(first, exp, block);
+        }
+        else {
+            LValue Lval = LValue();
+            consume(IToken.Kind.ASSIGN, "Assignment operator expected");
+            Expr exp = expression();
+            return new AssignmentStatement(first, Lval, exp);
+        }
+    }
 
     //================ UTILITY FUNCTIONS ==================//
 
