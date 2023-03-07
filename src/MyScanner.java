@@ -14,8 +14,8 @@ public class MyScanner implements IScanner {
         put("image", IToken.Kind.RES_image);
         put("pixel", IToken.Kind.RES_pixel);
         put("red", IToken.Kind.RES_red);
-        put("green", IToken.Kind.RES_grn);
-        put("blue", IToken.Kind.RES_blu);
+        put("grn", IToken.Kind.RES_grn);
+        put("blu", IToken.Kind.RES_blu);
         put("int", IToken.Kind.RES_int);
         put("string", IToken.Kind.RES_string);
         put("void", IToken.Kind.RES_void);
