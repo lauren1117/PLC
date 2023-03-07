@@ -188,7 +188,8 @@ public class MyScanner implements IScanner {
                     }
                     else {
                         //insert error token?
-                        tokens.add(new MyToken("INVALID CHAR", IToken.Kind.ERROR, new IToken.SourceLocation(row,initialPos)));
+                        throw new LexicalException("INVALID CHAR");
+                        //tokens.add(new MyToken("INVALID CHAR", IToken.Kind.ERROR, new IToken.SourceLocation(row,initialPos)));
                     }
                 }
 
@@ -199,9 +200,11 @@ public class MyScanner implements IScanner {
                         currToken += ch;
                         long lengthTest = Long.parseLong(currToken);
                         if (lengthTest > Integer.MAX_VALUE){
-                            tokens.add(new MyToken("Number is larger than INT MAX", IToken.Kind.ERROR, new IToken.SourceLocation(row, initialPos)));
+                            throw new LexicalException("NUMBER LARGER THAN INT MAX");
+                            /* tokens.add(new MyToken("Number is larger than INT MAX", IToken.Kind.ERROR, new IToken.SourceLocation(row, initialPos)));
                             state = State.ERROR;
                             break forloop;
+                            */
                         }
                         col++;
                     }
@@ -249,7 +252,8 @@ public class MyScanner implements IScanner {
                         currToken += ch;
                         stringLitVal += ch;
                         if(ch == 10 || ch == 13) {
-                            tokens.add(new MyToken("ILLEGAL NEW LINE", IToken.Kind.ERROR, new IToken.SourceLocation(row, initialPos)));
+                            throw new LexicalException("ILLEGAL NEW LINE");
+                            //tokens.add(new MyToken("ILLEGAL NEW LINE", IToken.Kind.ERROR, new IToken.SourceLocation(row, initialPos)));
                         }
                     }
                     col++;
@@ -306,7 +310,8 @@ public class MyScanner implements IScanner {
                         col++;
                     }
                     else{
-                        tokens.add(new MyToken("ERROR", IToken.Kind.ERROR, new IToken.SourceLocation(row,initialPos)));
+                        throw new LexicalException("ERROR: INCOMPLETE EXCHANGE");
+                        //tokens.add(new MyToken("ERROR", IToken.Kind.ERROR, new IToken.SourceLocation(row,initialPos)));
                     }
                     state = State.START;
                 }
@@ -329,7 +334,8 @@ public class MyScanner implements IScanner {
                     }
                     //else, error
                     else {
-                        tokens.add(new MyToken("Illegal Escape", IToken.Kind.ERROR, new IToken.SourceLocation(row,initialPos)));
+                        throw new LexicalException("ILLEGAL ESCAPE");
+                        //tokens.add(new MyToken("Illegal Escape", IToken.Kind.ERROR, new IToken.SourceLocation(row,initialPos)));
                     }
                 }
             }
@@ -354,8 +360,9 @@ public class MyScanner implements IScanner {
             }
             case IN_STRING_LIT -> {
                 //if exited forloop without reaching a " to close the string and reset the state to start,
-                //add an error
-                tokens.add(new MyToken("ERROR", IToken.Kind.ERROR, new IToken.SourceLocation(row,initialPos)));
+                //throw an error
+                throw new LexicalException("CLOSING QUOTE EXPECTED IN STRING");
+                //tokens.add(new MyToken("ERROR", IToken.Kind.ERROR, new IToken.SourceLocation(row,initialPos)));
             }
         }
 
