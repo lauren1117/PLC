@@ -66,7 +66,8 @@ public class MyParser implements IParser {
         while(match(IToken.Kind.RES_image, IToken.Kind.RES_pixel, IToken.Kind.RES_int, IToken.Kind.RES_string, IToken.Kind.RES_void)) {
             currIndex--;
             Declaration dec = Declaration();
-            consume(IToken.Kind.DOT, "Dot expected");
+            String message = "Dot expected at Col: " + peek().getSourceLocation().column() + " Line: " + peek().getSourceLocation().line();
+            consume(IToken.Kind.DOT, message);
             decs.add(dec);
         }
         return decs;
@@ -243,11 +244,12 @@ public class MyParser implements IParser {
         Expr primExp = primaryExpr();
         PixelSelector pix = null;
         if(match(IToken.Kind.LSQUARE)) {
+            currIndex--;
             pix = PixelSelector();
         }
         IToken color = null;
         if(match(IToken.Kind.COLON)) {
-            color = peek();
+            color = advance();
         }
 
         if(color == null && pix == null) {
@@ -304,8 +306,10 @@ public class MyParser implements IParser {
     PixelSelector PixelSelector() throws PLCException
     {
         IToken first = peek();
+        consume(IToken.Kind.LSQUARE, "L square exp");
         Expr expr1 = expression();
-        consume(IToken.Kind.COMMA, "Comma expected");
+        String message = "Comma 1 expected at Col: " + peek().getSourceLocation().column() + " Line: " + peek().getSourceLocation().line();
+        consume(IToken.Kind.COMMA, message);
         Expr expr2 = expression();
         consume(IToken.Kind.RSQUARE, "Right square expected");
         return new PixelSelector(first, expr1, expr2);
@@ -315,9 +319,11 @@ public class MyParser implements IParser {
     Expr ExpandedPixel() throws PLCException {
         IToken first = previous();
         Expr expr1 = expression();
-        consume(IToken.Kind.COMMA, "Comma expected");
+        String message = "Comma 2 expected at Col: " + peek().getSourceLocation().column() + " Line: " + peek().getSourceLocation().line();
+        consume(IToken.Kind.COMMA, message);
         Expr expr2 = expression();
-        consume(IToken.Kind.COMMA, "Comma expected");
+        message = "Comma 3 expected at Col: " + peek().getSourceLocation().column() + " Line: " + peek().getSourceLocation().line();
+        consume(IToken.Kind.COMMA, message);
         Expr expr3 = expression();
         consume(IToken.Kind.RSQUARE, "Right square expected");
         return new ExpandedPixelExpr(first, expr1, expr2, expr3);
@@ -336,7 +342,7 @@ public class MyParser implements IParser {
     {
         IToken first = advance();
         Expr expr1 = expression();
-        consume(IToken.Kind.COMMA, "Comma expected");
+        consume(IToken.Kind.COMMA, "Comma  4 expected");
         Expr expr2 = expression();
         consume(IToken.Kind.RSQUARE, "Right square expected");
         return new Dimension(first, expr1, expr2);
@@ -350,6 +356,7 @@ public class MyParser implements IParser {
 
         PixelSelector pix = null;
         if(match(IToken.Kind.LSQUARE)) {
+            currIndex--;
             pix = PixelSelector();
         }
         IToken color = null;
