@@ -392,6 +392,10 @@ public class MyParser implements IParser {
             Block block = Block();
             return new WhileStatement(first, exp, block);
         }
+        else if(match(IToken.Kind.COLON)) {
+            Expr exp = expression();
+            return new ReturnStatement(first, exp);
+        }
         else {
             LValue Lval = LValue();
             consume(IToken.Kind.ASSIGN, "Assignment operator expected");
