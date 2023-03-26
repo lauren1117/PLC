@@ -39,10 +39,12 @@ public class MyParser implements IParser {
 
         consume(IToken.Kind.LPAREN, "Left parentheses expected");
         List<NameDef> params = ParamList();
-        //TODO========== Return list of name def arguments
         consume(IToken.Kind.RPAREN, "Right parentheses expected");
 
         Block block = Block();
+        if(currIndex != tokens.size()) {
+            throw new SyntaxException("Invalid token");
+        }
 
         return new Program(first, Type.getType(first), id, params, block);
     }
