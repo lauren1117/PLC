@@ -27,8 +27,7 @@ public class CompilerComponentFactory {
 	}
 
 	public static ASTVisitor makeTypeChecker() throws PLCException {
-		return null;
-		//new ASTVisitor();
+		return new ASTVisitorClass();
 	}
 
 }

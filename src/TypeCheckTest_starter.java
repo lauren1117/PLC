@@ -16,8 +16,8 @@ import org.junit.jupiter.api.Test;
 
 import edu.ufl.cise.plcsp23.ast.AST;
 import edu.ufl.cise.plcsp23.ast.ASTVisitor;
-import edu.ufl.cise.plcsp23.javaCompilerClassLoader.DynamicClassLoader;
-import edu.ufl.cise.plcsp23.javaCompilerClassLoader.DynamicCompiler;
+//import edu.ufl.cise.plcsp23.javaCompilerClassLoader.DynamicClassLoader;
+//import edu.ufl.cise.plcsp23.javaCompilerClassLoader.DynamicCompiler;
 
 class TypeCheckTest_starter {
 	
@@ -62,11 +62,11 @@ class TypeCheckTest_starter {
 	}
 	
 	@Test
-	void t1() throws PLCException{
+	void t1() throws PLCException {
 		String input = """
 				int f(int xx, string ss, image ii, pixel p){}
 				""";
-		typeCheck(input);				
+		typeCheck(input);
 	}
 	
 	@Test
@@ -82,7 +82,7 @@ class TypeCheckTest_starter {
 		String input = """
 				string f(int f, string f){}
 				""";
-		typeCheckError(input);				
+		typeCheckError(input);
 	}
 	
 	@Test
@@ -93,7 +93,7 @@ class TypeCheckTest_starter {
 				  string ss.
 				   }
 				""";
-		typeCheck(input);				
+		typeCheck(input);
 	}
 	
 	@Test
@@ -104,7 +104,7 @@ class TypeCheckTest_starter {
 				  string ss.
 				   }
 				""";
-		typeCheckError(input);				
+		typeCheckError(input);
 	}
 	
 	@Test
@@ -145,7 +145,7 @@ class TypeCheckTest_starter {
 				:3.
 				}
 				""";
-		typeCheck(input);		
+		typeCheck(input);
 	}
 	
 	@Test void t10() throws PLCException{
@@ -156,7 +156,7 @@ class TypeCheckTest_starter {
 				int rr = j[3,4]:red.
 				}
 				""";
-		typeCheck(input);		
+		typeCheck(input);
 	}
 	
 	@Test void t11() throws PLCException{
@@ -166,7 +166,7 @@ class TypeCheckTest_starter {
 				i[x,y] = [x,y,0].
 				}
 				""";
-		typeCheck(input);		
+		typeCheck(input);
 	}
 	
 	@Test void t12() throws PLCException {
