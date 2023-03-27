@@ -1,5 +1,6 @@
-package edu.ufl.cise.plcsp23;
+package edu.ufl.cise.plcsp23.ast;
 
+import edu.ufl.cise.plcsp23.PLCException;
 import edu.ufl.cise.plcsp23.ast.*;
 
 import java.util.HashMap;
@@ -18,6 +19,11 @@ public class ASTVisitorClass implements ASTVisitor {
         public Declaration lookup(String name) {
             return entries.get(name);
         }
+    }
+
+    @Override
+    public Object visitProgram(Program program, Object arg) throws PLCException {
+        return null;
     }
 
     @Override
@@ -92,11 +98,6 @@ public class ASTVisitorClass implements ASTVisitor {
 
     @Override
     public Object visitPredeclaredVarExpr(PredeclaredVarExpr predeclaredVarExpr, Object arg) throws PLCException {
-        return null;
-    }
-
-    @Override
-    public Object visitProgram(Program program, Object arg) throws PLCException {
         return null;
     }
 

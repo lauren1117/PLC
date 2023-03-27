@@ -19,7 +19,7 @@ import edu.ufl.cise.plcsp23.ast.ASTVisitor;
 //import edu.ufl.cise.plcsp23.javaCompilerClassLoader.DynamicClassLoader;
 //import edu.ufl.cise.plcsp23.javaCompilerClassLoader.DynamicCompiler;
 
-class TypeCheckTest_starter {
+class Assignment4Test_starter {
 	
 
 	/* Scans, parses, and type checks input.  Returns normally if no errors. */
@@ -106,9 +106,10 @@ class TypeCheckTest_starter {
 				""";
 		typeCheckError(input);
 	}
-	
+
 	@Test
 	void t6() throws PLCException{
+		//fails because NameDef cannot be of type void .... (void xx) invalid
 		String input = """
 				void f(void xx){}
 				""";
@@ -203,7 +204,7 @@ class TypeCheckTest_starter {
 		String input = """
 				int f(int xx){
 				: Z/2 + xx.
-				}				
+				}
 				""";
 		typeCheck(input);
 	}
