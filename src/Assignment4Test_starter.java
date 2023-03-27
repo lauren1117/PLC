@@ -79,6 +79,7 @@ class Assignment4Test_starter {
 	
 	@Test
 	void t3() throws PLCException{
+		//fails bc both parameters are named f
 		String input = """
 				string f(int f, string f){}
 				""";
@@ -98,6 +99,8 @@ class Assignment4Test_starter {
 	
 	@Test
 	void t5() throws PLCException{
+		//fails b/c program doesn't return a string?
+		//or b/c redeclaring with name s?
 		String input = """
 				string f(int f, string s){
 				  int s.
@@ -118,6 +121,7 @@ class Assignment4Test_starter {
 	
 	@Test
 	void t7() throws PLCException{
+		//fails bc program is void but has return statement
 		String input = """
 				void f(){
 				  int xx = 2.
@@ -132,6 +136,8 @@ class Assignment4Test_starter {
 	
 	@Test
 	void t8() throws PLCException{
+		//can't initialize a variable w/ itself b/c it doesn't have a value yet
+		//would it be okay if xx was already initialized??
 		String input = """
 				void f(){
 				  int xx = 2+xx.
@@ -192,6 +198,7 @@ class Assignment4Test_starter {
 	}
 	
 	@Test void t14() throws PLCException {
+		//supposed to return a string lit but no quotes, returning a conditional expr
 		String input = """
 				string s(string s0, string s1, int ok){
 				:if ok ? ok+1 ? s0 + s1 .
@@ -245,6 +252,8 @@ class Assignment4Test_starter {
 	}
 	
 	@Test void t18() throws PLCException {
+		//scope issue
+		//xx is defined within first while loop, not in scope for second while loop
 		String input = """
 				int f(){
 				int i = 3.
