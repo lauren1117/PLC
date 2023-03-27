@@ -42,6 +42,7 @@ public class MyParser implements IParser {
         consume(IToken.Kind.RPAREN, "Right parentheses expected");
 
         Block block = Block();
+
         if(currIndex != tokens.size()) {
             throw new SyntaxException("Invalid token");
         }
@@ -79,7 +80,7 @@ public class MyParser implements IParser {
     List<Statement> StatementList() throws PLCException
     {
         ArrayList<Statement> statements = new ArrayList<Statement>();
-        while(match(IToken.Kind.IDENT, IToken.Kind.RES_write, IToken.Kind.RES_while)) {
+        while(match(IToken.Kind.IDENT, IToken.Kind.RES_write, IToken.Kind.RES_while, IToken.Kind.COLON)) {
             currIndex--;
             Statement statement = Statement();
             consume(IToken.Kind.DOT, "Dot expected");
