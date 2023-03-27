@@ -2,7 +2,24 @@ package edu.ufl.cise.plcsp23;
 
 import edu.ufl.cise.plcsp23.ast.*;
 
+import java.util.HashMap;
+
 public class ASTVisitorClass implements ASTVisitor {
+
+    //Symbol table class for keeping track of scope
+    public class SymbolTable {
+        HashMap<String, Declaration> entries = new HashMap<>();
+
+        //returns true if successfully inserted, false if it was already there
+        public boolean insert(String name, Declaration dec) {
+            return (entries.putIfAbsent(name, dec) == null);
+        }
+
+        public Declaration lookup(String name) {
+            return entries.get(name);
+        }
+    }
+
     @Override
     public Object visitAssignmentStatement(AssignmentStatement statementAssign, Object arg) throws PLCException {
         return null;
