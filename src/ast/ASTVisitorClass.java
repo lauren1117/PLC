@@ -175,6 +175,9 @@ public class ASTVisitorClass implements ASTVisitor {
                 throw new TypeCheckException("Expression must have pixel or channel selector");
             }
         }
+        else {
+            throw new TypeCheckException("primtype not image or pixel");
+        }
 
         return unaryExprPostfix.getType();
     }
@@ -362,7 +365,7 @@ public class ASTVisitorClass implements ASTVisitor {
     public Object visitIdentExpr(IdentExpr identExpr, Object arg) throws PLCException {
         //check if identExpr.getName() is defined and visible in scope
         String name = identExpr.getName();
-        if(!table.definitions.containsKey(name) || !table.definitions.get(name)){
+        if(!table.definitions.containsKey(name)){
             throw new TypeCheckException("Identifier must be defined before used");
         }
 
