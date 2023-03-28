@@ -1,5 +1,6 @@
 package edu.ufl.cise.plcsp23.ast;
 
+import edu.ufl.cise.plcsp23.IToken;
 import edu.ufl.cise.plcsp23.PLCException;
 import edu.ufl.cise.plcsp23.TypeCheckException;
 import edu.ufl.cise.plcsp23.ast.*;
@@ -14,7 +15,9 @@ public class ASTVisitorClass implements ASTVisitor {
 
     //Symbol table class for keeping track of scope
     public class SymbolTable {
+
         HashMap<String, NameDef> entries = new HashMap<>();
+        HashMap<String, Boolean> definitions = new HashMap<>();
         HashMap<Integer, ArrayList<NameDef>> scopeVars = new HashMap<>();
         Stack<Integer> scope = new Stack<>();
 
@@ -35,6 +38,7 @@ public class ASTVisitorClass implements ASTVisitor {
             if(vars != null) {
                 for (NameDef n : vars) {
                     entries.remove(n.getIdent().getName());
+                    definitions.remove(n.getIdent().getName());
                 }
             }
             scopeVars.remove(scope);
@@ -102,6 +106,8 @@ public class ASTVisitorClass implements ASTVisitor {
         }
         else {
             table.scopeVars.get(table.scope.peek()).add(nameDef);
+            Boolean def = declaration.getInitializer() != null;
+            table.definitions.put(nameDef.getIdent().getName(), def);
         }
         if (nameDef.getType() == Type.IMAGE){
             if (exp == null && nameDef.getDimension() == null){
@@ -129,7 +135,40 @@ public class ASTVisitorClass implements ASTVisitor {
 
     @Override
     public Object visitUnaryExprPostFix(UnaryExprPostfix unaryExprPostfix, Object arg) throws PLCException {
-        return null;
+        PixelSelector px = unaryExprPostfix.getPixel();
+        ColorChannel ch = unaryExprPostfix.getColor();
+        if(px != null) {
+            px.visit(this, arg);
+        }
+
+        Type primType = (Type) unaryExprPostfix.getPrimary().visit(this, arg);
+
+        if(primType == Type.PIXEL) {
+            if(px == null && ch != null) {
+                unaryExprPostfix.setType(Type.INT);
+            }
+            else {
+                throw new TypeCheckException("Bad UnaryPostFix for PIXEL type");
+            }
+        }
+        else if(primType == Type.IMAGE) {
+            if(px == null && ch != null) {
+                unaryExprPostfix.setType(Type.IMAGE);
+            }
+            else if(px != null) {
+                if(ch != null) {
+                    unaryExprPostfix.setType(Type.INT);
+                }
+                else {
+                    unaryExprPostfix.setType(Type.PIXEL);
+                }
+            }
+            else {
+                throw new TypeCheckException("Expression must have pixel or channel selector");
+            }
+        }
+
+        return unaryExprPostfix.getType();
     }
 
     @Override
@@ -168,15 +207,141 @@ public class ASTVisitorClass implements ASTVisitor {
 
     @Override
     public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws PLCException {
-        return null;
+        Type LType = (Type) binaryExpr.getLeft().visit(this, arg);
+        Type RType = (Type) binaryExpr.getRight().visit(this, arg);
+        IToken.Kind op = binaryExpr.getOp();
+
+        switch(op) {
+            case BITOR, BITAND -> {
+                if(LType == Type.PIXEL && RType == Type.PIXEL) {
+                    binaryExpr.setType(Type.PIXEL);
+                }
+                else {
+                    throw new TypeCheckException("BITWISE operands must be pixels");
+                }
+            }
+            case OR, AND -> {
+                if(LType == Type.INT && RType == Type.INT) {
+                    binaryExpr.setType(Type.INT);
+                }
+                else {
+                    throw new TypeCheckException("Logical operands must be pixels");
+                }
+            }
+            case LT, GT, LE, GE -> {
+                if(LType == Type.INT && RType == Type.INT) {
+                    binaryExpr.setType(Type.INT);
+                }
+                else {
+                    throw new TypeCheckException("Comparison operands must be pixels");
+                }
+            }
+            case EQ -> {
+                if(LType == Type.VOID || RType == Type.VOID) {
+                    throw new TypeCheckException("EQ operands cannot be of type void");
+                }
+                if(LType != RType) {
+                    throw new TypeCheckException("EQ operands must be of the same type");
+                }
+                else {
+                    binaryExpr.setType(Type.INT);
+                }
+            }
+            case EXP -> {
+                if(RType == Type.INT) {
+                    if(LType == Type.INT) {
+                        binaryExpr.setType(Type.INT);
+                    }
+                    else if(LType == Type.PIXEL) {
+                        binaryExpr.setType(Type.PIXEL);
+                    }
+                    else {
+                        throw new TypeCheckException("Exponent left operand of invalid type");
+                    }
+                }
+                else {
+                    throw new TypeCheckException("Exponent right operand of invalid type");
+                }
+            }
+            case PLUS -> {
+                if(RType == LType && RType != Type.VOID) {
+                    binaryExpr.setType(LType);
+                }
+                else {
+                    throw new TypeCheckException("Cannot add operands of different or void types");
+                }
+            }
+            case MINUS -> {
+                if(RType == LType && RType != Type.VOID && RType != Type.STRING) {
+                    binaryExpr.setType(LType);
+                }
+                else {
+                    throw new TypeCheckException("Cannot subtract operands of different or void/string types");
+                }
+            }
+            case TIMES, DIV, MOD -> {
+                if(LType == Type.INT) {
+                    if(RType == Type.INT) {
+                        binaryExpr.setType(Type.INT);
+                    }
+                    else {
+                        throw new TypeCheckException("Operands must both be of type INT");
+                    }
+                }
+
+                else if(LType == Type.PIXEL) {
+                    if(RType == Type.PIXEL || RType == Type.INT) {
+                        binaryExpr.setType(Type.PIXEL);
+                    }
+                    else {
+                        throw new TypeCheckException("Operand must be pixel or int");
+                    }
+                }
+
+                else if(LType == Type.IMAGE) {
+                    if(RType == Type.IMAGE || RType == Type.INT) {
+                        binaryExpr.setType(Type.IMAGE);
+                    }
+                    else {
+                        throw new TypeCheckException("Operand must be image or int");
+                    }
+                }
+                else {
+                    throw new TypeCheckException("Invalid type for operands: TIMES, DIV, MOD");
+                }
+            }
+        }
+
+        return binaryExpr.getType();
     }
 
     @Override
     public Object visitUnaryExpr(UnaryExpr unaryExpr, Object arg) throws PLCException {
-        unaryExpr.getE().visit(this, arg);
-        //see table for allowed operators
+        Type exprType = (Type)unaryExpr.getE().visit(this, arg);
+        IToken.Kind op = unaryExpr.getOp();
 
-        return null;
+        //see table for allowed operators
+        if(op == IToken.Kind.BANG) {
+            if(exprType == Type.INT) {
+                unaryExpr.setType(Type.INT);
+            }
+            else if(exprType == Type.PIXEL) {
+                unaryExpr.setType(Type.PIXEL);
+            }
+            else {
+                throw new TypeCheckException("Bang can only be applied to INT or PIXEL");
+            }
+        }
+        else if(op == IToken.Kind.MINUS || op == IToken.Kind.RES_cos || op == IToken.Kind.RES_sin || op == IToken.Kind.RES_atan) {
+            if(exprType == Type.INT) {
+                unaryExpr.setType(Type.INT);
+            }
+            else {
+                throw new TypeCheckException("Other unary ops can only be applied to INT");
+            }
+        }
+
+        return unaryExpr.getType();
     }
 
     @Override
@@ -188,9 +353,14 @@ public class ASTVisitorClass implements ASTVisitor {
     @Override
     public Object visitIdentExpr(IdentExpr identExpr, Object arg) throws PLCException {
         //check if identExpr.getName() is defined and visible in scope
-        //get namedef type from symbol table
+        String name = identExpr.getName();
+        if(!table.entries.containsKey(name) || !table.definitions.get(name)){
+            throw new TypeCheckException("Identifier must be defined before used");
+        }
 
-        //identExpr.setType(table.lookup(identExpr.getName()).getNameDef().getType());
+        //get namedef type from symbol table
+        identExpr.setType(table.lookup(name).getType());
+
         return null;
     }
 
@@ -245,7 +415,7 @@ public class ASTVisitorClass implements ASTVisitor {
     @Override
     public Object visitIdent(Ident ident, Object arg) throws PLCException {
         //set type based on type assigned when declared
-
+        ident.setDef(table.entries.get(ident.getName()));
         return null;
     }
 
@@ -263,8 +433,49 @@ public class ASTVisitorClass implements ASTVisitor {
 
     @Override
     public Object visitLValue(LValue lValue, Object arg) throws PLCException {
-        //check if lValue.getIdent() has been declared and is visible in this scope
-        //see table (idk for what though)
+        Type idType = (Type)lValue.getIdent().visit(this, arg);
+        String name = lValue.getIdent().getName();
+        PixelSelector p = lValue.getPixelSelector();
+        ColorChannel c = lValue.getColor();
+
+        if(!table.entries.containsKey(lValue.getIdent().getName())) {
+            throw new TypeCheckException("Idents must be declared before they are used");
+        }
+
+        Type tp = table.entries.get(name).getType();
+        switch(tp) {
+            case IMAGE -> {
+                if(p == null) {
+                    return Type.IMAGE;
+                }
+                else if(c == null) {
+                    return Type.PIXEL;
+                }
+                else {
+                    return Type.INT;
+                }
+            }
+            case PIXEL -> {
+                if(p != null) {
+                    throw new TypeCheckException("Pixel should not have selector");
+                }
+                else {
+                    if(c == null){
+                        return Type.PIXEL;
+                    }
+                    else {
+                        return Type.INT;
+                    }
+                }
+            }
+            case STRING -> {
+                return Type.STRING;
+            }
+            case INT -> {
+                return Type.INT;
+            }
+        }
+
 
         return null;
     }
@@ -273,9 +484,37 @@ public class ASTVisitorClass implements ASTVisitor {
     public Object visitAssignmentStatement(AssignmentStatement statementAssign, Object arg) throws PLCException {
         Type LVType = (Type) statementAssign.getLv().visit(this, arg);
         Type EType = (Type) statementAssign.getE().visit(this, arg);
+        String idName = statementAssign.getLv().getIdent().getName();
 
+        System.out.println(LVType);
         //compare LVType and EType based on Assignment Compatibility table
+        if(LVType == Type.IMAGE) {
+            if(EType == Type.INT || EType == Type.VOID) {
+                throw new TypeCheckException("Expression resolved to improper type for IMAGE");
+            }
+        }
+        else if(LVType == Type.PIXEL) {
+            if(EType == Type.IMAGE || EType == Type.VOID || EType == Type.STRING) {
+                throw new TypeCheckException("Expression resolved to improper type for PIXEL");
+            }
+        }
+        else if(LVType == Type.INT) {
+            if(EType == Type.IMAGE || EType == Type.VOID || EType == Type.STRING) {
+                throw new TypeCheckException("Expression resolved to improper type for INT");
+            }
+        }
+        else if(LVType == Type.STRING) {
+            if(EType == Type.VOID) {
+                throw new TypeCheckException("Expression resolved to improper type for STRING");
+            }
+        }
+        else {
+            throw new TypeCheckException("Invalid LValue Type");
+        }
 
+        if(table.entries.containsKey(idName)) {
+            table.definitions.put(idName, true);
+        }
 
         return null;
     }
