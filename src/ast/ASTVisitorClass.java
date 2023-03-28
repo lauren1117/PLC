@@ -6,16 +6,14 @@ import edu.ufl.cise.plcsp23.TypeCheckException;
 import edu.ufl.cise.plcsp23.ast.*;
 
 import javax.naming.Name;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 
 public class ASTVisitorClass implements ASTVisitor {
 
     //Symbol table class for keeping track of scope
     public class SymbolTable {
 
+        HashMap<String, NameDef> vars = new HashMap<>();
         HashMap<String, Boolean> definitions = new HashMap<>();
         HashMap<Integer, HashMap<String, NameDef>> scopeVars = new HashMap<>();
         Stack<Integer> scope = new Stack<>();
@@ -24,6 +22,9 @@ public class ASTVisitorClass implements ASTVisitor {
 
         //returns true if successfully inserted, false if it was already there
         public boolean insertEntry(String name, NameDef def) {
+            if(!vars.containsKey(name)) {
+                vars.put(name, def);
+            }
             return (scopeVars.get(scope.peek()).putIfAbsent(name, def) == null);
         }
 
@@ -31,24 +32,30 @@ public class ASTVisitorClass implements ASTVisitor {
             return(scopeVars.putIfAbsent(scope, vars) == null);
         }
 
-        /*
-        public void removeVars(Integer scope) {
-            ArrayList<NameDef> vars = scopeVars.get(scope);
+        public void removeVars(Integer s) {
             //iterate through name defs, remove names from entries map
-            if(vars != null) {
-                for (NameDef n : vars) {
-                    entries.remove(n.getIdent().getName());
-                    definitions.remove(n.getIdent().getName());
-                }
+            HashMap<String, NameDef> map = scopeVars.get(s);
+
+            for (Map.Entry<String,NameDef> mapElement : map.entrySet()) {
+                String key = mapElement.getKey();
+                definitions.remove(key);
+                vars.remove(key);
             }
-            scopeVars.remove(scope);
-        } */
+
+            scopeVars.remove(s);
+        }
 
         public NameDef lookup(String name) {
-            return scopeVars.get(scope.peek()).get(name);
+            NameDef nDef = null;
+            for (Map.Entry<Integer, HashMap<String, NameDef>> mapElement : scopeVars.entrySet()) {
+                NameDef n = mapElement.getValue().get(name);
+                if(n != null) {
+                    nDef = n;
+                }
+            }
+            return nDef;
         }
     }
-
     SymbolTable table = new SymbolTable();
     Type progType = null;
 
@@ -73,7 +80,8 @@ public class ASTVisitorClass implements ASTVisitor {
             }
         }
         program.getBlock().visit(this, arg);
-        //table.removeVars(table.scope.pop());
+
+        table.removeVars(table.scope.pop());
         return null;
     }
 
@@ -354,13 +362,12 @@ public class ASTVisitorClass implements ASTVisitor {
     public Object visitIdentExpr(IdentExpr identExpr, Object arg) throws PLCException {
         //check if identExpr.getName() is defined and visible in scope
         String name = identExpr.getName();
-        if(!table.scopeVars.get(table.scope.peek()).containsKey(name) || !table.definitions.get(name)){
+        if(!table.definitions.containsKey(name) || !table.definitions.get(name)){
             throw new TypeCheckException("Identifier must be defined before used");
         }
 
         //get namedef type from symbol table
         identExpr.setType(table.lookup(name).getType());
-
         return identExpr.getType();
     }
 
@@ -414,8 +421,15 @@ public class ASTVisitorClass implements ASTVisitor {
 
     @Override
     public Object visitIdent(Ident ident, Object arg) throws PLCException {
+        NameDef def = null;
         //set type based on type assigned when declared
-        ident.setDef(table.scopeVars.get(table.scope.peek()).get(ident.getName()));
+        if(table.scopeVars.get(table.scope.peek()).containsKey(ident.getName())) {
+            ident.setDef(table.scopeVars.get(table.scope.peek()).get(ident.getName()));
+        }
+        else {
+            ident.setDef(table.vars.get(ident.getName()));
+        }
+
         return null;
     }
 
@@ -438,11 +452,16 @@ public class ASTVisitorClass implements ASTVisitor {
         PixelSelector p = lValue.getPixelSelector();
         ColorChannel c = lValue.getColor();
 
-        if(!table.scopeVars.get(table.scope.peek()).containsKey(lValue.getIdent().getName())) {
+        if(!table.definitions.containsKey(lValue.getIdent().getName())) {
             throw new TypeCheckException("Idents must be declared before they are used");
         }
+        Type tp = null;
+        if(table.scopeVars.get(table.scope.peek()).containsKey(name)) {
+            tp = table.scopeVars.get(table.scope.peek()).get(name).getType();        }
+        else {
+            tp = table.vars.get(name).getType();
+        }
 
-        Type tp = table.scopeVars.get(table.scope.peek()).get(name).getType();
         switch(tp) {
             case IMAGE -> {
                 if(p == null) {
@@ -475,7 +494,6 @@ public class ASTVisitorClass implements ASTVisitor {
                 return Type.INT;
             }
         }
-
 
         return null;
     }
@@ -538,6 +556,8 @@ public class ASTVisitorClass implements ASTVisitor {
         System.out.println(table.scope.peek());
         table.insertScope(table.scope.peek(), new HashMap<String, NameDef>());
         whileStatement.getBlock().visit(this, arg);
+
+        table.removeVars(table.scope.pop());
 
         return null;
     }
