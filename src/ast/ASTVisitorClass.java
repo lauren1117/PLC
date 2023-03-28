@@ -46,6 +46,7 @@ public class ASTVisitorClass implements ASTVisitor {
     }
 
     SymbolTable table = new SymbolTable();
+    Type progType = null;
 
     @Override
     public Object visitProgram(Program program, Object arg) throws PLCException {
@@ -53,10 +54,18 @@ public class ASTVisitorClass implements ASTVisitor {
         table.insertScope(table.scope.peek(), new ArrayList<>());
         table.scopeNum++;
 
+        progType = program.getType();
+
         List<NameDef> paramList = program.getParamList();
         if(paramList != null) {
             for(NameDef n : paramList) {
                 n.visit(this, arg);
+                if (!table.insertEntry(n.getIdent().getName(), n)) {
+                    throw new TypeCheckException("Attempted redeclaration of IDENT: " + n.getIdent().getName());
+                }
+                else {
+                    table.scopeVars.get(table.scope.peek()).add(n);
+                }
             }
         }
         program.getBlock().visit(this, arg);
@@ -88,9 +97,15 @@ public class ASTVisitorClass implements ASTVisitor {
         if (exp != null){
             exp.visit(this, arg);
         }
+        if (!table.insertEntry(nameDef.getIdent().getName(), nameDef)) {
+            throw new TypeCheckException("Attempted redeclaration of IDENT: " + nameDef.getIdent().getName());
+        }
+        else {
+            table.scopeVars.get(table.scope.peek()).add(nameDef);
+        }
         if (nameDef.getType() == Type.IMAGE){
             if (exp == null && nameDef.getDimension() == null){
-                throw new TypeCheckException("no initialize or dimension even though its an image");
+                throw new TypeCheckException("Image requires initializer or dimension");
             }
         }
 
@@ -109,20 +124,29 @@ public class ASTVisitorClass implements ASTVisitor {
             throw new TypeCheckException("Identifier cannot be of type void");
         }
 
-        if (!table.insertEntry(nameDef.getIdent().getName(), nameDef)) {
-            throw new TypeCheckException("Attempted redeclaration of IDENT: " + nameDef.getIdent().getName());
-        }
-        else {
-            System.out.println(table.scopeVars.containsKey(table.scopeNum));
-            table.scopeVars.get(table.scope.peek()).add(nameDef);
-        }
-
         return null;
     }
 
     @Override
-    public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws PLCException {
+    public Object visitUnaryExprPostFix(UnaryExprPostfix unaryExprPostfix, Object arg) throws PLCException {
         return null;
+    }
+
+    @Override
+    public Object visitPixelFuncExpr(PixelFuncExpr pixelFuncExpr, Object arg) throws PLCException {
+        //pixel selector is properly typed
+        //visit it so that the check of type of pixelFuncExpr.getSelector() happens and it can throw exception if needed
+        pixelFuncExpr.getSelector().visit(this, arg);
+
+
+        pixelFuncExpr.setType(Type.INT);
+        return pixelFuncExpr.getType();
+    }
+
+    @Override
+    public Object visitPredeclaredVarExpr(PredeclaredVarExpr predeclaredVarExpr, Object arg) throws PLCException {
+        predeclaredVarExpr.setType(Type.INT);
+        return predeclaredVarExpr.getType();
     }
 
     @Override
@@ -143,15 +167,15 @@ public class ASTVisitorClass implements ASTVisitor {
     }
 
     @Override
-    public Object visitUnaryExpr(UnaryExpr unaryExpr, Object arg) throws PLCException {
-        unaryExpr.getE().visit(this, arg);
-        //see table for allowed operators
-
+    public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws PLCException {
         return null;
     }
 
     @Override
-    public Object visitUnaryExprPostFix(UnaryExprPostfix unaryExprPostfix, Object arg) throws PLCException {
+    public Object visitUnaryExpr(UnaryExpr unaryExpr, Object arg) throws PLCException {
+        unaryExpr.getE().visit(this, arg);
+        //see table for allowed operators
+
         return null;
     }
 
@@ -189,14 +213,18 @@ public class ASTVisitorClass implements ASTVisitor {
     }
 
     @Override
-    public Object visitDimension(Dimension dimension, Object arg) throws PLCException {
-        Type expr0Type = (Type) dimension.getHeight().visit(this, arg);
-        Type expr1Type = (Type) dimension.getWidth().visit(this, arg);
+    public Object visitPixelSelector(PixelSelector pixelSelector, Object arg) throws PLCException {
+        Type xType = (Type) pixelSelector.getX().visit(this,arg);
+        Type yType = (Type) pixelSelector.getY().visit(this, arg);
 
-        if (expr0Type != expr1Type){
-            throw new TypeCheckException("at least one expr in dimension is not an int");
+        if (xType != Type.INT){
+            throw new TypeCheckException("pixelSelector.x not an int @ row: " + pixelSelector.getLine() + " col: " + pixelSelector.getColumn() );
         }
-
+        if (yType != Type.INT){
+            throw new TypeCheckException("pixelSelector.y not an int @ row: " + pixelSelector.getLine() + " col: " + pixelSelector.getColumn() );
+        }
+        //pixelSelector does not have a type
+        //just return an int type??
         return Type.INT;
     }
 
@@ -222,59 +250,23 @@ public class ASTVisitorClass implements ASTVisitor {
     }
 
     @Override
-    public Object visitLValue(LValue lValue, Object arg) throws PLCException {
-        //check if lValue.getIdent() has been declared and is visible in this scope
-        //see table (idk for what though)
+    public Object visitDimension(Dimension dimension, Object arg) throws PLCException {
+        Type expr0Type = (Type) dimension.getHeight().visit(this, arg);
+        Type expr1Type = (Type) dimension.getWidth().visit(this, arg);
 
-
-        return null;
-    }
-
-    @Override
-    public Object visitPixelFuncExpr(PixelFuncExpr pixelFuncExpr, Object arg) throws PLCException {
-        //pixel selector is properly typed
-        //visit it so that the check of type of pixelFuncExpr.getSelector() happens and it can throw exception if needed
-        pixelFuncExpr.getSelector().visit(this, arg);
-
-
-        pixelFuncExpr.setType(Type.INT);
-        return pixelFuncExpr.getType();
-    }
-
-    @Override
-    public Object visitPixelSelector(PixelSelector pixelSelector, Object arg) throws PLCException {
-        Type xType = (Type) pixelSelector.getX().visit(this,arg);
-        Type yType = (Type) pixelSelector.getY().visit(this, arg);
-
-        if (xType != Type.INT){
-            throw new TypeCheckException("pixelSelector.x not an int @ row: " + pixelSelector.getLine() + " col: " + pixelSelector.getColumn() );
+        if (expr0Type != expr1Type){
+            throw new TypeCheckException("at least one expr in dimension is not an int");
         }
-        if (yType != Type.INT){
-            throw new TypeCheckException("pixelSelector.y not an int @ row: " + pixelSelector.getLine() + " col: " + pixelSelector.getColumn() );
-        }
-        //pixelSelector does not have a type
-        //just return an int type??
+
         return Type.INT;
     }
 
     @Override
-    public Object visitPredeclaredVarExpr(PredeclaredVarExpr predeclaredVarExpr, Object arg) throws PLCException {
-        predeclaredVarExpr.setType(Type.INT);
-        return predeclaredVarExpr.getType();
-    }
+    public Object visitLValue(LValue lValue, Object arg) throws PLCException {
+        //check if lValue.getIdent() has been declared and is visible in this scope
+        //see table (idk for what though)
 
-    @Override
-    public Object visitReturnStatement(ReturnStatement returnStatement, Object arg) throws PLCException {
-        //get program type in this function, maybe pass in as arg??
-        //Type progType = (Type) ;
-        //maybe lookup in symbol table??
-        Type exprType = (Type) returnStatement.getE().visit(this, arg);
-
-        /*if (exprType != progType){
-            throw new TypeCheckException("return value and program type not the same");
-        }*/
-
-        return exprType;
+        return null;
     }
 
     @Override
@@ -289,13 +281,20 @@ public class ASTVisitorClass implements ASTVisitor {
     }
 
     @Override
+    public Object visitWriteStatement(WriteStatement statementWrite, Object arg) throws PLCException {
+        statementWrite.getE().visit(this, arg);
+
+        return null;
+    }
+
+    @Override
     public Object visitWhileStatement(WhileStatement whileStatement, Object arg) throws PLCException {
         Type guardType = (Type) whileStatement.getGuard().visit(this, arg);
         if (guardType != Type.INT){
             throw new TypeCheckException("while statement guard not an int");
         }
 
-        //enter scope ??
+        //enter scope
         table.scope.push(table.scopeNum);
         table.insertScope(table.scope.peek(), new ArrayList<NameDef>());
         table.scopeNum++;
@@ -303,15 +302,23 @@ public class ASTVisitorClass implements ASTVisitor {
         //exit scope and remove its associated variables
         table.removeVars(table.scope.pop());
 
-
         return null;
     }
 
     @Override
-    public Object visitWriteStatement(WriteStatement statementWrite, Object arg) throws PLCException {
-        statementWrite.getE().visit(this, arg);
+    public Object visitReturnStatement(ReturnStatement returnStatement, Object arg) throws PLCException {
+        //get program type in this function, maybe pass in as arg??
 
-        return null;
+        Type exprType = (Type) returnStatement.getE().visit(this, arg);
+
+        if(progType == Type.VOID) {
+            throw new TypeCheckException("Void program cannot have return value");
+        }
+        if(exprType != progType) {
+            throw new TypeCheckException("Return type does not match program type");
+        }
+
+        return exprType;
     }
 
 
