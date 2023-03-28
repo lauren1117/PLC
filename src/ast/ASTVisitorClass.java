@@ -16,22 +16,22 @@ public class ASTVisitorClass implements ASTVisitor {
     //Symbol table class for keeping track of scope
     public class SymbolTable {
 
-        HashMap<String, NameDef> entries = new HashMap<>();
         HashMap<String, Boolean> definitions = new HashMap<>();
-        HashMap<Integer, ArrayList<NameDef>> scopeVars = new HashMap<>();
+        HashMap<Integer, HashMap<String, NameDef>> scopeVars = new HashMap<>();
         Stack<Integer> scope = new Stack<>();
 
         int scopeNum = 0;
 
         //returns true if successfully inserted, false if it was already there
         public boolean insertEntry(String name, NameDef def) {
-            return (entries.putIfAbsent(name, def) == null);
+            return (scopeVars.get(scope.peek()).putIfAbsent(name, def) == null);
         }
 
-        public boolean insertScope(Integer scope, ArrayList<NameDef> list) {
-            return(scopeVars.putIfAbsent(scope, list) == null);
+        public boolean insertScope(Integer scope, HashMap<String, NameDef> vars) {
+            return(scopeVars.putIfAbsent(scope, vars) == null);
         }
 
+        /*
         public void removeVars(Integer scope) {
             ArrayList<NameDef> vars = scopeVars.get(scope);
             //iterate through name defs, remove names from entries map
@@ -42,10 +42,10 @@ public class ASTVisitorClass implements ASTVisitor {
                 }
             }
             scopeVars.remove(scope);
-        }
+        } */
 
         public NameDef lookup(String name) {
-            return entries.get(name);
+            return scopeVars.get(scope.peek()).get(name);
         }
     }
 
@@ -55,8 +55,7 @@ public class ASTVisitorClass implements ASTVisitor {
     @Override
     public Object visitProgram(Program program, Object arg) throws PLCException {
         table.scope.push(table.scopeNum);
-        table.insertScope(table.scope.peek(), new ArrayList<>());
-        table.scopeNum++;
+        table.insertScope(table.scope.peek(), new HashMap<String, NameDef>());
 
         progType = program.getType();
 
@@ -69,13 +68,12 @@ public class ASTVisitorClass implements ASTVisitor {
                 }
 
                 else {
-                    table.scopeVars.get(table.scope.peek()).add(n);
                     table.definitions.put(n.getIdent().getName(), true);
                 }
             }
         }
         program.getBlock().visit(this, arg);
-        table.removeVars(table.scope.pop());
+        //table.removeVars(table.scope.pop());
         return null;
     }
 
@@ -107,7 +105,7 @@ public class ASTVisitorClass implements ASTVisitor {
             throw new TypeCheckException("Attempted redeclaration of IDENT: " + nameDef.getIdent().getName());
         }
         else {
-            table.scopeVars.get(table.scope.peek()).add(nameDef);
+            table.scopeVars.get(table.scope.peek()).put(nameDef.getIdent().getName(), nameDef);
             Boolean def = declaration.getInitializer() != null;
             table.definitions.put(nameDef.getIdent().getName(), def);
         }
@@ -356,14 +354,14 @@ public class ASTVisitorClass implements ASTVisitor {
     public Object visitIdentExpr(IdentExpr identExpr, Object arg) throws PLCException {
         //check if identExpr.getName() is defined and visible in scope
         String name = identExpr.getName();
-        if(!table.entries.containsKey(name) || !table.definitions.get(name)){
+        if(!table.scopeVars.get(table.scope.peek()).containsKey(name) || !table.definitions.get(name)){
             throw new TypeCheckException("Identifier must be defined before used");
         }
 
         //get namedef type from symbol table
         identExpr.setType(table.lookup(name).getType());
 
-        return null;
+        return identExpr.getType();
     }
 
     @Override
@@ -417,7 +415,7 @@ public class ASTVisitorClass implements ASTVisitor {
     @Override
     public Object visitIdent(Ident ident, Object arg) throws PLCException {
         //set type based on type assigned when declared
-        ident.setDef(table.entries.get(ident.getName()));
+        ident.setDef(table.scopeVars.get(table.scope.peek()).get(ident.getName()));
         return null;
     }
 
@@ -440,11 +438,11 @@ public class ASTVisitorClass implements ASTVisitor {
         PixelSelector p = lValue.getPixelSelector();
         ColorChannel c = lValue.getColor();
 
-        if(!table.entries.containsKey(lValue.getIdent().getName())) {
+        if(!table.scopeVars.get(table.scope.peek()).containsKey(lValue.getIdent().getName())) {
             throw new TypeCheckException("Idents must be declared before they are used");
         }
 
-        Type tp = table.entries.get(name).getType();
+        Type tp = table.scopeVars.get(table.scope.peek()).get(name).getType();
         switch(tp) {
             case IMAGE -> {
                 if(p == null) {
@@ -488,7 +486,6 @@ public class ASTVisitorClass implements ASTVisitor {
         Type EType = (Type) statementAssign.getE().visit(this, arg);
         String idName = statementAssign.getLv().getIdent().getName();
 
-        System.out.println(LVType);
         //compare LVType and EType based on Assignment Compatibility table
         if(LVType == Type.IMAGE) {
             if(EType == Type.INT || EType == Type.VOID) {
@@ -514,7 +511,7 @@ public class ASTVisitorClass implements ASTVisitor {
             throw new TypeCheckException("Invalid LValue Type");
         }
 
-        if(table.entries.containsKey(idName)) {
+        if(table.scopeVars.get(table.scope.peek()).containsKey(idName)) {
             table.definitions.put(idName, true);
         }
 
@@ -536,12 +533,11 @@ public class ASTVisitorClass implements ASTVisitor {
         }
 
         //enter scope
-        table.scope.push(table.scopeNum);
-        table.insertScope(table.scope.peek(), new ArrayList<NameDef>());
         table.scopeNum++;
+        table.scope.push(table.scopeNum);
+        System.out.println(table.scope.peek());
+        table.insertScope(table.scope.peek(), new HashMap<String, NameDef>());
         whileStatement.getBlock().visit(this, arg);
-        //exit scope and remove its associated variables
-        table.removeVars(table.scope.pop());
 
         return null;
     }
