@@ -5,21 +5,42 @@ import edu.ufl.cise.plcsp23.TypeCheckException;
 import edu.ufl.cise.plcsp23.ast.*;
 
 import javax.naming.Name;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Stack;
 
 public class ASTVisitorClass implements ASTVisitor {
 
     //Symbol table class for keeping track of scope
     public class SymbolTable {
-        HashMap<String, Declaration> entries = new HashMap<>();
+        HashMap<String, NameDef> entries = new HashMap<>();
+        HashMap<Integer, ArrayList<NameDef>> scopeVars = new HashMap<>();
+        Stack<Integer> scope = new Stack<>();
+
+        int scopeNum = 0;
 
         //returns true if successfully inserted, false if it was already there
-        public boolean insert(String name, Declaration dec) {
-            return (entries.putIfAbsent(name, dec) == null);
+        public boolean insertEntry(String name, NameDef def) {
+            return (entries.putIfAbsent(name, def) == null);
         }
 
-        public Declaration lookup(String name) {
+        public boolean insertScope(Integer scope, ArrayList<NameDef> list) {
+            return(scopeVars.putIfAbsent(scope, list) == null);
+        }
+
+        public void removeVars(Integer scope) {
+            ArrayList<NameDef> vars = scopeVars.get(scope);
+            //iterate through name defs, remove names from entries map
+            if(vars != null) {
+                for (NameDef n : vars) {
+                    entries.remove(n.getIdent().getName());
+                }
+            }
+            scopeVars.remove(scope);
+        }
+
+        public NameDef lookup(String name) {
             return entries.get(name);
         }
     }
@@ -28,6 +49,10 @@ public class ASTVisitorClass implements ASTVisitor {
 
     @Override
     public Object visitProgram(Program program, Object arg) throws PLCException {
+        table.scope.push(table.scopeNum);
+        table.insertScope(table.scopeNum, new ArrayList<>());
+        table.scopeNum++;
+
         List<NameDef> paramList = program.getParamList();
         if(paramList != null) {
             for(NameDef n : paramList) {
@@ -35,6 +60,7 @@ public class ASTVisitorClass implements ASTVisitor {
             }
         }
         program.getBlock().visit(this, arg);
+        table.removeVars(table.scope.pop());
         return null;
     }
 
@@ -57,6 +83,7 @@ public class ASTVisitorClass implements ASTVisitor {
     public Object visitDeclaration(Declaration declaration, Object arg) throws PLCException {
         NameDef nameDef = declaration.getNameDef();
         Expr exp = declaration.getInitializer();
+
         nameDef.visit(this, arg);
         if (exp != null){
             exp.visit(this, arg);
@@ -80,6 +107,14 @@ public class ASTVisitorClass implements ASTVisitor {
         }
         if(nameDef.getType() == Type.VOID) {
             throw new TypeCheckException("Identifier cannot be of type void");
+        }
+
+        if (!table.insertEntry(nameDef.getIdent().getName(), nameDef)) {
+            throw new TypeCheckException("Attempted redeclaration of IDENT: " + nameDef.getIdent().getName());
+        }
+        else {
+            System.out.println(table.scopeVars.containsKey(table.scopeNum));
+            table.scopeVars.get(table.scopeNum).add(nameDef);
         }
 
         return null;
@@ -131,7 +166,7 @@ public class ASTVisitorClass implements ASTVisitor {
         //check if identExpr.getName() is defined and visible in scope
         //get namedef type from symbol table
 
-        identExpr.setType(table.lookup(identExpr.getName()).getNameDef().getType());
+        //identExpr.setType(table.lookup(identExpr.getName()).getNameDef().getType());
         return null;
     }
 
@@ -261,8 +296,12 @@ public class ASTVisitorClass implements ASTVisitor {
         }
 
         //enter scope ??
+        table.scope.push(table.scopeNum);
+        table.insertScope(table.scopeNum, new ArrayList<NameDef>());
+        table.scopeNum++;
         whileStatement.getBlock().visit(this, arg);
-        //exit scope ??
+        //exit scope and remove its associated variables
+        table.removeVars(table.scope.pop());
 
 
         return null;
