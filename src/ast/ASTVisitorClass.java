@@ -36,6 +36,18 @@ public class ASTVisitorClass implements ASTVisitor {
 
     @Override
     public Object visitDeclaration(Declaration declaration, Object arg) throws PLCException {
+        NameDef nameDef = declaration.getNameDef();
+        Expr exp = declaration.getInitializer();
+        nameDef.visit(this, arg);
+        if (exp != null){
+            exp.visit(this, arg);
+        }
+        if (nameDef.getType() == Type.IMAGE){
+            if (exp == null && nameDef.getDimension() == null){
+                throw new TypeCheckException("no initialize or dimension even though its an image");
+            }
+        }
+
         return null;
     }
 
