@@ -4,7 +4,9 @@ import edu.ufl.cise.plcsp23.PLCException;
 import edu.ufl.cise.plcsp23.TypeCheckException;
 import edu.ufl.cise.plcsp23.ast.*;
 
+import javax.naming.Name;
 import java.util.HashMap;
+import java.util.List;
 
 public class ASTVisitorClass implements ASTVisitor {
 
@@ -26,11 +28,28 @@ public class ASTVisitorClass implements ASTVisitor {
 
     @Override
     public Object visitProgram(Program program, Object arg) throws PLCException {
+        List<NameDef> paramList = program.getParamList();
+        if(paramList != null) {
+            for(NameDef n : paramList) {
+                n.visit(this, arg);
+            }
+        }
+        program.getBlock().visit(this, arg);
         return null;
     }
 
     @Override
     public Object visitBlock(Block block, Object arg) throws PLCException {
+        List<Declaration> decList = block.getDecList();
+        List<Statement> stateList = block.getStatementList();
+
+        for(Declaration d : decList) {
+            d.visit(this, arg);
+        }
+        for(Statement s : stateList) {
+            s.visit(this, arg);
+        }
+
         return null;
     }
 
@@ -50,8 +69,6 @@ public class ASTVisitorClass implements ASTVisitor {
         if(nameDef.getType() == Type.VOID) {
             throw new TypeCheckException("Identifier cannot be of type void");
         }
-
-        //table.insert(nameDef.ident.getName(), )
 
         return null;
     }
