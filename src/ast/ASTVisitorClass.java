@@ -67,8 +67,10 @@ public class ASTVisitorClass implements ASTVisitor {
                 if (!table.insertEntry(n.getIdent().getName(), n)) {
                     throw new TypeCheckException("Attempted redeclaration of IDENT: " + n.getIdent().getName());
                 }
+
                 else {
                     table.scopeVars.get(table.scope.peek()).add(n);
+                    table.definitions.put(n.getIdent().getName(), true);
                 }
             }
         }
