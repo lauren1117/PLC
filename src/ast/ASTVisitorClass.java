@@ -50,7 +50,7 @@ public class ASTVisitorClass implements ASTVisitor {
     @Override
     public Object visitProgram(Program program, Object arg) throws PLCException {
         table.scope.push(table.scopeNum);
-        table.insertScope(table.scopeNum, new ArrayList<>());
+        table.insertScope(table.scope.peek(), new ArrayList<>());
         table.scopeNum++;
 
         List<NameDef> paramList = program.getParamList();
@@ -114,7 +114,7 @@ public class ASTVisitorClass implements ASTVisitor {
         }
         else {
             System.out.println(table.scopeVars.containsKey(table.scopeNum));
-            table.scopeVars.get(table.scopeNum).add(nameDef);
+            table.scopeVars.get(table.scope.peek()).add(nameDef);
         }
 
         return null;
@@ -297,7 +297,7 @@ public class ASTVisitorClass implements ASTVisitor {
 
         //enter scope ??
         table.scope.push(table.scopeNum);
-        table.insertScope(table.scopeNum, new ArrayList<NameDef>());
+        table.insertScope(table.scope.peek(), new ArrayList<NameDef>());
         table.scopeNum++;
         whileStatement.getBlock().visit(this, arg);
         //exit scope and remove its associated variables
