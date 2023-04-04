@@ -31,4 +31,9 @@ public class CompilerComponentFactory {
 		return new ASTVisitorClass();
 	}
 
+	public static ASTVisitor makeCodeGenerator(String packageName) {
+		return null;
+	}
+
+
 }
