@@ -556,7 +556,6 @@ public class ASTVisitorClass implements ASTVisitor {
         //enter scope
         table.scopeNum++;
         table.scope.push(table.scopeNum);
-        System.out.println(table.scope.peek());
         table.insertScope(table.scope.peek(), new HashMap<String, NameDef>());
         whileStatement.getBlock().visit(this, arg);
 
@@ -574,8 +573,10 @@ public class ASTVisitorClass implements ASTVisitor {
         if(progType == Type.VOID) {
             throw new TypeCheckException("Void program cannot have return value");
         }
-        if(exprType != progType) {
-            throw new TypeCheckException("Return type does not match program type");
+        if(!((exprType == Type.INT || exprType == Type.PIXEL) && ((progType == Type.INT || progType == Type.PIXEL)))) {
+            if (exprType != progType) {
+                throw new TypeCheckException("Return type does not match program type");
+            }
         }
 
         return exprType;
