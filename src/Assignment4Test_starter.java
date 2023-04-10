@@ -690,6 +690,7 @@ string s(string s0, string s1, int ok){
 			assertEquals(Type.INT, v11.getType());
 			Expr v12 = ((BinaryExpr)v11).getLeft();
 
+
 			checkBinary(v12,Kind.DIV);
 			assertEquals(Type.INT, v12.getType());
 			Expr v13 = ((BinaryExpr)v12).getLeft();

@@ -111,7 +111,7 @@ class Assignment5Test_starter {
 				string c(int val){
 				   string ss = if val > 0 ? "greater" ? "not greater".
 				   :ss.
-				   } 
+				   }
 				""";
         int v = -2;
         Object[] params = {v};
