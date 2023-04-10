@@ -108,7 +108,7 @@ public class CodeGenerator implements ASTVisitor {
     public Object visitNameDef(NameDef nameDef, Object arg) throws PLCException {
         String defStr = getString(nameDef.getType());
         defStr += " " + nameDef.getIdent().getName();
-        return "";
+        return defStr;
     }
 
     @Override
@@ -231,7 +231,15 @@ public class CodeGenerator implements ASTVisitor {
 
     @Override
     public Object visitConditionalExpr(ConditionalExpr conditionalExpr, Object arg) throws PLCException {
-        return null;
+        String condStr = "";
+
+        Expr guard = conditionalExpr.getGuard();
+        Expr trueCase = conditionalExpr.getTrueCase();
+        Expr falseCase = conditionalExpr.getFalseCase();
+
+        condStr += "(" + guard.visit(this, arg) + ") ? \"" + trueCase.visit(this, arg) + "\" : \"" + falseCase.visit(this, arg) + "\"";
+
+        return condStr;
     }
 
     @Override
