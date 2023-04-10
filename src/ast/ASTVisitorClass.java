@@ -460,6 +460,10 @@ public class ASTVisitorClass implements ASTVisitor {
         PixelSelector p = lValue.getPixelSelector();
         ColorChannel c = lValue.getColor();
 
+        if(p != null) {
+            p.visit(this, arg);
+        }
+
         if(!table.definitions.containsKey(lValue.getIdent().getName())) {
             throw new TypeCheckException("Idents must be declared before they are used");
         }
