@@ -12,6 +12,7 @@ package edu.ufl.cise.plcsp23;
 
 import edu.ufl.cise.plcsp23.ast.ASTVisitor;
 import edu.ufl.cise.plcsp23.ast.ASTVisitorClass;
+import edu.ufl.cise.plcsp23.ast.CodeGenerator;
 
 public class CompilerComponentFactory {
 	public static IScanner makeScanner(String input) throws LexicalException {
@@ -32,7 +33,7 @@ public class CompilerComponentFactory {
 	}
 
 	public static ASTVisitor makeCodeGenerator(String packageName) {
-		return null;
+		return new CodeGenerator();
 	}
 
 

@@ -14,7 +14,7 @@ import edu.ufl.cise.plcsp23.javaCompilerClassLoader.DynamicCompiler;
 
 class Assignment5Test_starter {
 		
-	Object genCodeAndRun(String input, String mypackage, Object[] params) throws Exception{
+	Object genCodeAndRun(String input, String mypackage, Object[] params) throws Exception {
 		show("**** Input ****");
 		show(input);
 		AST ast = CompilerComponentFactory.makeParser(input).parse();
