@@ -181,6 +181,7 @@ void f(){}
 			List<Statement> v7 = v4.getStatementList();
 			int v8= v7.size();
 			assertEquals(0, v8);
+			System.out.println(v0.getType().toString().toLowerCase());
 		});
 	}
 
