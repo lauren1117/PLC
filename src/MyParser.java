@@ -370,7 +370,7 @@ public class MyParser implements IParser {
         }
         IToken color = null;
         if(match(IToken.Kind.COLON)) {
-            color = peek();
+            color = advance();
             try {
                 ColorChannel.getColor(color);
             }
@@ -401,7 +401,7 @@ public class MyParser implements IParser {
         }
         else {
             LValue Lval = LValue();
-            consume(IToken.Kind.ASSIGN, "Assignment operator expected");
+            consume(IToken.Kind.ASSIGN, "Assignment operator expected at Line: " + peek().getSourceLocation().line() + " Col: " + peek().getSourceLocation().column());
             Expr exp = expression();
             return new AssignmentStatement(first, Lval, exp);
         }
