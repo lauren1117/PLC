@@ -11,11 +11,13 @@ import java.util.List;
 import java.util.Objects;
 
 public class CodeGenerator implements ASTVisitor {
-
+    Boolean write = false;
+    Boolean random = false;
 
     @Override
     public Object visitProgram(Program program, Object arg) throws PLCException {
-        String javaCode = "public class " //public class
+        String javaCode = "";
+        javaCode += "public class " //public class
                             + program.getIdent().getName() //NAME
                             + " {\n\t"                      //{
                             +"public static "              // public static
@@ -35,6 +37,12 @@ public class CodeGenerator implements ASTVisitor {
         javaCode += "\n\t";
         javaCode += "}\n}";
 
+        if(write) {
+            javaCode = "import edu.ufl.cise.plcsp23.runtime.ConsoleIO\n" + javaCode;
+        }
+        if(random) {
+            javaCode = "import java.lang.Math\n" + javaCode;
+        }
         return javaCode;
     }
 
@@ -54,6 +62,7 @@ public class CodeGenerator implements ASTVisitor {
 
         return blockStr;
     }
+
     @Override
     public Object visitDeclaration(Declaration declaration, Object arg) throws PLCException {
         NameDef nameDef = declaration.getNameDef();
@@ -61,8 +70,8 @@ public class CodeGenerator implements ASTVisitor {
 
         String decStr = (String)nameDef.visit(this, arg);
 
-        if (exp != null){
-            decStr += exp.visit(this, arg);
+        if (exp != null) {
+            decStr += " = " + exp.visit(this, arg);
         }
 
         decStr += ";";
@@ -94,6 +103,19 @@ public class CodeGenerator implements ASTVisitor {
     public Object visitNumLitExpr(NumLitExpr numLitExpr, Object arg) throws PLCException {
         return Integer.toString(numLitExpr.getValue());
     }
+
+    @Override
+    public Object visitNameDef(NameDef nameDef, Object arg) throws PLCException {
+        String defStr = nameDef.getType().toString().toLowerCase();
+        defStr += " " + nameDef.getIdent().getName();
+        return "";
+    }
+
+    @Override
+    public Object visitRandomExpr(RandomExpr randomExpr, Object arg) throws PLCException {
+        return "Math.floor(Math.random() * 256)";
+    }
+
 
 
 
@@ -564,13 +586,6 @@ public class CodeGenerator implements ASTVisitor {
     }*/
 
 
-
-
-    @Override
-    public Object visitRandomExpr(RandomExpr randomExpr, Object arg) throws PLCException {
-        return null;
-    }
-
     @Override
     public Object visitStringLitExpr(StringLitExpr stringLitExpr, Object arg) throws PLCException {
         return null;
@@ -633,11 +648,6 @@ public class CodeGenerator implements ASTVisitor {
 
     @Override
     public Object visitLValue(LValue lValue, Object arg) throws PLCException {
-        return null;
-    }
-
-    @Override
-    public Object visitNameDef(NameDef nameDef, Object arg) throws PLCException {
         return null;
     }
 

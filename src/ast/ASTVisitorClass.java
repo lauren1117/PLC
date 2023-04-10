@@ -529,7 +529,6 @@ public class ASTVisitorClass implements ASTVisitor {
     @Override
     public Object visitWriteStatement(WriteStatement statementWrite, Object arg) throws PLCException {
         statementWrite.getE().visit(this, arg);
-
         return null;
     }
 

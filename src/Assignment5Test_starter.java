@@ -102,7 +102,7 @@ class Assignment5Test_starter {
 		Object[] params = {aa,bb};
 		Object result = genCodeAndRun(input, "", params);
 		assertEquals(aa+bb, result); 
-	}	
+	}
 	
 	@Test
 	void cg5a() throws Exception{
