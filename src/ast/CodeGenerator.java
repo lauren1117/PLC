@@ -24,7 +24,7 @@ public class CodeGenerator implements ASTVisitor {
         //concat params w string
         List<NameDef> p = program.getParamList();
         for(int i = 0; i < p.size(); i++) {
-            javaCode += p.get(i).getType().toString().toLowerCase() + p.get(i).getIdent().getName();
+            javaCode += p.get(i).getType().toString().toLowerCase() + " " + p.get(i).getIdent().getName();
             if(i != p.size()-1) {
                 javaCode += ", ";
             }
@@ -86,7 +86,6 @@ public class CodeGenerator implements ASTVisitor {
         String retStr = "return ";
         retStr += returnStatement.getE().visit(this, arg);
         retStr += ";";
-
         return retStr;
     }
 
@@ -95,8 +94,25 @@ public class CodeGenerator implements ASTVisitor {
         return Integer.toString(numLitExpr.getValue());
     }
 
+    @Override
+    public Object visitStringLitExpr(StringLitExpr stringLitExpr, Object arg) throws PLCException {
+        return stringLitExpr.getValue();
+    }
 
+    @Override
+    public Object visitZExpr(ZExpr zExpr, Object arg) throws PLCException {
+        return Integer.toString(255);
+    }
 
+    @Override
+    public Object visitLValue(LValue lValue, Object arg) throws PLCException {
+        return lValue.getIdent().toString();
+    }
+
+    @Override
+    public Object visitIdent(Ident ident, Object arg) throws PLCException {
+        return ident.getName();
+    }
 
     /* @Override
     public Object visitNameDef(NameDef nameDef, Object arg) throws PLCException {
@@ -571,10 +587,7 @@ public class CodeGenerator implements ASTVisitor {
         return null;
     }
 
-    @Override
-    public Object visitStringLitExpr(StringLitExpr stringLitExpr, Object arg) throws PLCException {
-        return null;
-    }
+
 
     @Override
     public Object visitUnaryExpr(UnaryExpr unaryExpr, Object arg) throws PLCException {
@@ -596,10 +609,7 @@ public class CodeGenerator implements ASTVisitor {
         return null;
     }
 
-    @Override
-    public Object visitZExpr(ZExpr zExpr, Object arg) throws PLCException {
-        return null;
-    }
+
 
     @Override
     public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws PLCException {
@@ -621,20 +631,14 @@ public class CodeGenerator implements ASTVisitor {
         return null;
     }
 
-    @Override
-    public Object visitIdent(Ident ident, Object arg) throws PLCException {
-        return null;
-    }
+
 
     @Override
     public Object visitIdentExpr(IdentExpr identExpr, Object arg) throws PLCException {
         return null;
     }
 
-    @Override
-    public Object visitLValue(LValue lValue, Object arg) throws PLCException {
-        return null;
-    }
+
 
     @Override
     public Object visitNameDef(NameDef nameDef, Object arg) throws PLCException {
