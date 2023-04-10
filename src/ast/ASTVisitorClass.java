@@ -108,10 +108,14 @@ public class ASTVisitorClass implements ASTVisitor {
         nameDef.visit(this, arg);
         if (exp != null){
             exp.visit(this, arg);
+            Type expType = (Type)exp.getType();
+            checkAssignTypes(nameDef.getType(), expType);
         }
+
         if (!table.insertEntry(nameDef.getIdent().getName(), nameDef)) {
             throw new TypeCheckException("Attempted redeclaration of IDENT: " + nameDef.getIdent().getName());
         }
+
         else {
             table.scopeVars.get(table.scope.peek()).put(nameDef.getIdent().getName(), nameDef);
             Boolean def = declaration.getInitializer() != null;
@@ -397,6 +401,7 @@ public class ASTVisitorClass implements ASTVisitor {
         Type xType = (Type) pixelSelector.getX().visit(this,arg);
         Type yType = (Type) pixelSelector.getY().visit(this, arg);
 
+
         if (xType != Type.INT){
             throw new TypeCheckException("pixelSelector.x not an int @ row: " + pixelSelector.getLine() + " col: " + pixelSelector.getColumn() );
         }
@@ -455,6 +460,10 @@ public class ASTVisitorClass implements ASTVisitor {
         PixelSelector p = lValue.getPixelSelector();
         ColorChannel c = lValue.getColor();
 
+        if(p != null) {
+            p.visit(this, arg);
+        }
+
         if(!table.definitions.containsKey(lValue.getIdent().getName())) {
             throw new TypeCheckException("Idents must be declared before they are used");
         }
@@ -508,29 +517,7 @@ public class ASTVisitorClass implements ASTVisitor {
         String idName = statementAssign.getLv().getIdent().getName();
 
         //compare LVType and EType based on Assignment Compatibility table
-        if(LVType == Type.IMAGE) {
-            if(EType == Type.INT || EType == Type.VOID) {
-                throw new TypeCheckException("Expression resolved to improper type for IMAGE");
-            }
-        }
-        else if(LVType == Type.PIXEL) {
-            if(EType == Type.IMAGE || EType == Type.VOID || EType == Type.STRING) {
-                throw new TypeCheckException("Expression resolved to improper type for PIXEL");
-            }
-        }
-        else if(LVType == Type.INT) {
-            if(EType == Type.IMAGE || EType == Type.VOID || EType == Type.STRING) {
-                throw new TypeCheckException("Expression resolved to improper type for INT");
-            }
-        }
-        else if(LVType == Type.STRING) {
-            if(EType == Type.VOID) {
-                throw new TypeCheckException("Expression resolved to improper type for STRING");
-            }
-        }
-        else {
-            throw new TypeCheckException("Invalid LValue Type");
-        }
+        checkAssignTypes(LVType, EType);
 
         if(table.scopeVars.get(table.scope.peek()).containsKey(idName)) {
             table.definitions.put(idName, true);
@@ -556,7 +543,6 @@ public class ASTVisitorClass implements ASTVisitor {
         //enter scope
         table.scopeNum++;
         table.scope.push(table.scopeNum);
-        System.out.println(table.scope.peek());
         table.insertScope(table.scope.peek(), new HashMap<String, NameDef>());
         whileStatement.getBlock().visit(this, arg);
 
@@ -574,12 +560,39 @@ public class ASTVisitorClass implements ASTVisitor {
         if(progType == Type.VOID) {
             throw new TypeCheckException("Void program cannot have return value");
         }
-        if(exprType != progType) {
-            throw new TypeCheckException("Return type does not match program type");
+        if(!((exprType == Type.INT || exprType == Type.PIXEL) && ((progType == Type.INT || progType == Type.PIXEL)))) {
+            if (exprType != progType) {
+                throw new TypeCheckException("Return type does not match program type");
+            }
         }
 
         return exprType;
     }
 
+    public void checkAssignTypes(Type LVType, Type EType) throws TypeCheckException {
+        if(LVType == Type.IMAGE) {
+            if(EType == Type.INT || EType == Type.VOID) {
+                throw new TypeCheckException("Expression resolved to improper type for IMAGE");
+            }
+        }
+        else if(LVType == Type.PIXEL) {
+            if(EType == Type.IMAGE || EType == Type.VOID || EType == Type.STRING) {
+                throw new TypeCheckException("Expression resolved to improper type for PIXEL");
+            }
+        }
+        else if(LVType == Type.INT) {
+            if(EType == Type.IMAGE || EType == Type.VOID || EType == Type.STRING) {
+                throw new TypeCheckException("Expression resolved to improper type for INT");
+            }
+        }
+        else if(LVType == Type.STRING) {
+            if(EType == Type.VOID) {
+                throw new TypeCheckException("Expression resolved to improper type for STRING");
+            }
+        }
+        else {
+            throw new TypeCheckException("Invalid LValue Type");
+        }
+    }
 
 }
