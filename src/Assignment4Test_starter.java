@@ -476,7 +476,7 @@ void f(){}
 			String input = """
 void f(string url){
 				image[300,400] i = url.
-				image[300,400] j.
+				image[300,400] j. 
 				j[a,r] = i[a_polar[y,x], r_polar[x,y]].
 				write j.
 				}
@@ -1205,9 +1205,7 @@ int f() {
 			assertThat("",v20,instanceOf(PixelSelector.class));
 			Expr v21 = ((PixelSelector)v20).getX();
 			checkNumLit(v21,100);
-
-			assertEquals(Type.INT, v21.getType()); //FAILS AT THIS LINE
-
+			assertEquals(Type.INT, v21.getType());
 			Expr v22 = ((PixelSelector)v20).getY();
 			checkNumLit(v22,100);
 			assertEquals(Type.INT, v22.getType());
