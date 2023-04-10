@@ -151,7 +151,7 @@ public class CodeGenerator implements ASTVisitor {
         String binStr = "";
 
         if(op == IToken.Kind.EXP) {
-            binStr = "Math.pow(";
+            binStr = "(int)Math.pow(";
             binStr += exp0.visit(this, arg) + ", ";
             binStr += ex1.visit(this, arg) + ")";
             return binStr;
@@ -229,7 +229,12 @@ public class CodeGenerator implements ASTVisitor {
 
     @Override
     public Object visitWhileStatement(WhileStatement whileStatement, Object arg) throws PLCException {
-        return null;
+        String whileStr = "while(";
+        whileStr += whileStatement.getGuard().visit(this, arg) + ") {\n\t";
+        whileStr += whileStatement.getBlock().visit(this, arg);
+        whileStr += "\n}";
+
+        return whileStr;
     }
 
     @Override
