@@ -39,11 +39,12 @@ public class CodeGenerator implements ASTVisitor {
         javaCode += "}\n}";
 
         if(write) {
-            javaCode = "import edu.ufl.cise.plcsp23.runtime.ConsoleIO\n" + javaCode;
+            javaCode = "import edu.ufl.cise.plcsp23.runtime.ConsoleIO;\n" + javaCode;
         }
-        if(random) {
-            javaCode = "import java.lang.Math\n" + javaCode;
+        if(random || exp) {
+            javaCode = "import java.lang.Math;\n" + javaCode;
         }
+
         return javaCode;
     }
 
@@ -75,7 +76,7 @@ public class CodeGenerator implements ASTVisitor {
             decStr += " = " + exp.visit(this, arg);
         }
 
-        decStr += ";";
+        decStr += ";\n";
 
         return decStr;
     }
@@ -86,7 +87,7 @@ public class CodeGenerator implements ASTVisitor {
         assignStr += statementAssign.getLv().visit(this, arg);
         assignStr += " = ";
         assignStr += statementAssign.getE().visit(this, arg);
-        assignStr += ";";
+        assignStr += ";\n";
 
         return assignStr;
     }
@@ -95,7 +96,7 @@ public class CodeGenerator implements ASTVisitor {
     public Object visitReturnStatement(ReturnStatement returnStatement, Object arg) throws PLCException {
         String retStr = "return ";
         retStr += returnStatement.getE().visit(this, arg);
-        retStr += ";";
+        retStr += ";\n";
         return retStr;
     }
 
@@ -207,7 +208,13 @@ public class CodeGenerator implements ASTVisitor {
         return binStr;
     }
 
-
+    @Override
+    public Object visitWriteStatement(WriteStatement statementWrite, Object arg) throws PLCException {
+        write = true;
+        String writeStr = "ConsoleIO.write(";
+        writeStr += statementWrite.getE().visit(this, arg) + ");\n";
+        return writeStr;
+    }
 
     @Override
     public Object visitUnaryExpr(UnaryExpr unaryExpr, Object arg) throws PLCException {
@@ -221,11 +228,6 @@ public class CodeGenerator implements ASTVisitor {
 
     @Override
     public Object visitWhileStatement(WhileStatement whileStatement, Object arg) throws PLCException {
-        return null;
-    }
-
-    @Override
-    public Object visitWriteStatement(WriteStatement statementWrite, Object arg) throws PLCException {
         return null;
     }
 
