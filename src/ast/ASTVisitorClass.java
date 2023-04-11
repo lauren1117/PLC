@@ -554,6 +554,7 @@ public class ASTVisitorClass implements ASTVisitor {
         return exprType;
     }
 
+    //validation for assignment compatibility
     public void checkAssignTypes(Type LVType, Type EType) throws TypeCheckException {
         if(LVType == Type.IMAGE) {
             if(EType == Type.INT || EType == Type.VOID) {
