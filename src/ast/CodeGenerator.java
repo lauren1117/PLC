@@ -14,6 +14,11 @@ public class CodeGenerator implements ASTVisitor {
     Type progType = null;
     int tabTracker = 2;   //formatting
 
+    Set<String> names = new HashSet<String>();
+    Stack<Integer> scope = new Stack<Integer>();
+
+    int scopeNum = 1;
+
     @Override
     public Object visitProgram(Program program, Object arg) throws PLCException {
         progType = program.getType();
@@ -28,6 +33,7 @@ public class CodeGenerator implements ASTVisitor {
         List<NameDef> p = program.getParamList();
         for(int i = 0; i < p.size(); i++) {
             javaCode += getString(p.get(i).getType()) + " " + p.get(i).getIdent().getName();
+            names.add(p.get(i).getIdent().getName());
             if(i != p.size()-1) {
                 javaCode += ", ";
             }
@@ -50,6 +56,8 @@ public class CodeGenerator implements ASTVisitor {
 
     @Override
     public Object visitBlock(Block block, Object arg) throws PLCException {
+        scope.push(scopeNum);
+        scopeNum++;
         List<Declaration> decList = block.getDecList();
         List<Statement> stateList = block.getStatementList();
 
@@ -68,6 +76,7 @@ public class CodeGenerator implements ASTVisitor {
             blockStr += s.visit(this, arg);
         }
 
+        scope.pop();
         return blockStr;
     }
 
@@ -168,8 +177,10 @@ public class CodeGenerator implements ASTVisitor {
 
     @Override
     public Object visitNameDef(NameDef nameDef, Object arg) throws PLCException {
+        String name = nameDef.getIdent().getName() + Integer.toString(scope.peek());
+        names.add(name);
         String defStr = getString(nameDef.getType());
-        defStr += " " + nameDef.getIdent().getName();
+        defStr += " " + name;
         return defStr;
     }
 
@@ -197,12 +208,20 @@ public class CodeGenerator implements ASTVisitor {
 
     @Override
     public Object visitIdent(Ident ident, Object arg) throws PLCException {
-        return ident.getName();
+        String name = getVarName(ident.getName());
+        if(name == null) {
+            throw new TypeCheckException("idek wtf is going on");
+        }
+        return name;
     }
 
     @Override
     public Object visitIdentExpr(IdentExpr identExpr, Object arg) throws PLCException {
-        return identExpr.getName();
+        String name = getVarName(identExpr.getName());
+        if(name == null) {
+            throw new TypeCheckException("idek wtf is going on");
+        }
+        return name;
     }
 
     @Override
@@ -421,6 +440,21 @@ public class CodeGenerator implements ASTVisitor {
             return "String";
         }
         return tp.toString().toLowerCase();
+    }
+
+    public String getVarName(String name) {
+
+        for(int i = scope.peek(); i > 0; i--) {
+            String n = name + Integer.toString(i);
+            if(names.contains(n)) {
+                return n;
+            }
+        }
+        if(names.contains(name)) {
+            return name;
+        }
+
+        return null;
     }
 
 }
