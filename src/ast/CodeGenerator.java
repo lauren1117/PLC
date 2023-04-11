@@ -11,9 +11,10 @@ import java.util.List;
 import java.util.Objects;
 
 public class CodeGenerator implements ASTVisitor {
-    Boolean write = false;
-    Boolean random = false;
-    Boolean exp = false;
+    Boolean write = false;  //import statements
+    Boolean math = false;
+
+    int tabTracker = 2;   //formatting
 
     @Override
     public Object visitProgram(Program program, Object arg) throws PLCException {
@@ -32,16 +33,16 @@ public class CodeGenerator implements ASTVisitor {
                 javaCode += ", ";
             }
         }
-        javaCode += ") { \n\t\t";
+        javaCode += ") { \n";
         String block = (String) program.getBlock().visit(this, arg);
         javaCode += block;
-        javaCode += "\n\t";
+        javaCode += "\t";
         javaCode += "}\n}";
 
         if(write) {
             javaCode = "import edu.ufl.cise.plcsp23.runtime.ConsoleIO;\n" + javaCode;
         }
-        if(random || exp) {
+        if(math) {
             javaCode = "import java.lang.Math;\n" + javaCode;
         }
 
@@ -56,9 +57,15 @@ public class CodeGenerator implements ASTVisitor {
         String blockStr = "";
 
         for(Declaration d : decList) {
-           blockStr += d.visit(this, arg);
+            for(int i = 0; i < tabTracker; i++) {
+                blockStr += "\t";
+            }
+            blockStr += d.visit(this, arg);
         }
         for(Statement s : stateList) {
+            for(int i = 0; i < tabTracker; i++) {
+                blockStr += "\t";
+            }
             blockStr += s.visit(this, arg);
         }
 
@@ -114,6 +121,7 @@ public class CodeGenerator implements ASTVisitor {
 
     @Override
     public Object visitRandomExpr(RandomExpr randomExpr, Object arg) throws PLCException {
+        math = true;
         return "Math.floor(Math.random() * 256)";
     }
 
@@ -151,6 +159,7 @@ public class CodeGenerator implements ASTVisitor {
         String binStr = "";
 
         if(op == IToken.Kind.EXP) {
+            math = true;
             binStr = "(int)Math.pow(";
             binStr += exp0.visit(this, arg) + ", ";
             binStr += ex1.visit(this, arg) + ")";
@@ -219,7 +228,32 @@ public class CodeGenerator implements ASTVisitor {
 
     @Override
     public Object visitUnaryExpr(UnaryExpr unaryExpr, Object arg) throws PLCException {
-        return null;
+        IToken.Kind op = unaryExpr.getOp();
+        String unaryStr = "";
+
+        switch (op) {
+            case BANG -> {
+                unaryStr += "!(";
+            }
+            case MINUS -> {
+                unaryStr += "-(";
+            }
+            case RES_sin -> {
+                math = true;
+                unaryStr += "Math.sin(";
+            }
+            case RES_cos -> {
+                math = true;
+                unaryStr += "Math.cos(";
+            }
+            case RES_atan -> {
+                math = true;
+                unaryStr += "Math.atan(";
+            }
+        }
+        unaryStr += unaryExpr.getE().visit(this, arg);
+        unaryStr += ") ";
+        return unaryStr;
     }
 
     @Override
@@ -230,9 +264,14 @@ public class CodeGenerator implements ASTVisitor {
     @Override
     public Object visitWhileStatement(WhileStatement whileStatement, Object arg) throws PLCException {
         String whileStr = "while(";
-        whileStr += whileStatement.getGuard().visit(this, arg) + ") {\n\t";
+        whileStr += whileStatement.getGuard().visit(this, arg) + ") {\n";
+        tabTracker++;
         whileStr += whileStatement.getBlock().visit(this, arg);
-        whileStr += "\n}";
+        tabTracker--;
+        for(int i = 0; i < tabTracker; i++) {
+            whileStr += "\t";
+        }
+        whileStr += "}\n";
 
         return whileStr;
     }
