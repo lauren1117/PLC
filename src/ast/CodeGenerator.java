@@ -78,7 +78,17 @@ public class CodeGenerator implements ASTVisitor {
         String decStr = (String)nameDef.visit(this, arg);
 
         if (exp != null) {
-            decStr += " = " + exp.visit(this, arg);
+            decStr += " = ";
+
+            if ((nameDef.getType() == Type.STRING && exp.getType() == Type.INT)){
+                decStr += "Integer.toString(";
+                decStr += exp.visit(this, arg);
+                decStr += ")";
+            }
+            else{
+                decStr += exp.visit(this, arg);
+            }
+
         }
 
         decStr += ";\n";
@@ -89,9 +99,25 @@ public class CodeGenerator implements ASTVisitor {
     @Override
     public Object visitAssignmentStatement(AssignmentStatement statementAssign, Object arg) throws PLCException {
         String assignStr = "";
-        assignStr += statementAssign.getLv().visit(this, arg);
+        LValue LV = statementAssign.getLv();
+        Expr E = statementAssign.getE();
+
+
+
+
+
+
+        assignStr += LV.visit(this, arg);
         assignStr += " = ";
-        assignStr += statementAssign.getE().visit(this, arg);
+        if ((LV.getIdent().getDef().getType() == Type.STRING && E.getType() == Type.INT)){
+            assignStr += "Integer.toString(";
+            assignStr += E.visit(this, arg);
+            assignStr += ")";
+        }
+        else{
+            assignStr += E.visit(this, arg);
+        }
+
         assignStr += ";\n";
 
         return assignStr;
