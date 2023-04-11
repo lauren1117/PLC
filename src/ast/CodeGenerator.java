@@ -11,11 +11,12 @@ import java.util.*;
 public class CodeGenerator implements ASTVisitor {
     Boolean write = false;  //import statements
     Boolean math = false;
-
+    Type progType = null;
     int tabTracker = 2;   //formatting
 
     @Override
     public Object visitProgram(Program program, Object arg) throws PLCException {
+        progType = program.getType();
         String javaCode = "";
         javaCode += "public class " //public class
                             + program.getIdent().getName() //NAME
@@ -126,7 +127,16 @@ public class CodeGenerator implements ASTVisitor {
     @Override
     public Object visitReturnStatement(ReturnStatement returnStatement, Object arg) throws PLCException {
         String retStr = "return ";
-        retStr += returnStatement.getE().visit(this, arg);
+
+        if(returnStatement.getE().getType() == Type.INT && progType == Type.STRING) {
+            retStr += "Integer.toString(";
+            retStr += returnStatement.getE().visit(this, arg);
+            retStr += ")";
+        }
+        else {
+            retStr += returnStatement.getE().visit(this, arg);
+        }
+
         retStr += ";\n";
         return retStr;
     }
