@@ -103,11 +103,6 @@ public class CodeGenerator implements ASTVisitor {
         LValue LV = statementAssign.getLv();
         Expr E = statementAssign.getE();
 
-
-
-
-
-
         assignStr += LV.visit(this, arg);
         assignStr += " = ";
         if ((LV.getIdent().getDef().getType() == Type.STRING && E.getType() == Type.INT)){
@@ -190,7 +185,7 @@ public class CodeGenerator implements ASTVisitor {
         Expr exp0 = binaryExpr.getLeft();
         IToken.Kind op = binaryExpr.getOp();
         Expr ex1 = binaryExpr.getRight();
-        String binStr = "";
+        String binStr = "(";
 
         if(op == IToken.Kind.EXP) {
             math = true;
@@ -248,6 +243,7 @@ public class CodeGenerator implements ASTVisitor {
         }
 
         binStr += ex1.visit(this, arg);
+        binStr += ")";
 
         return binStr;
     }
@@ -318,7 +314,7 @@ public class CodeGenerator implements ASTVisitor {
         Expr trueCase = conditionalExpr.getTrueCase();
         Expr falseCase = conditionalExpr.getFalseCase();
 
-        condStr += "(" + guard.visit(this, arg) + ") ? " + trueCase.visit(this, arg) + " : " + falseCase.visit(this, arg);
+        condStr += "((" + guard.visit(this, arg) + ") ? " + trueCase.visit(this, arg) + " : " + falseCase.visit(this, arg) + ")";
 
         return condStr;
     }
