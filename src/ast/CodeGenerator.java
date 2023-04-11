@@ -293,8 +293,31 @@ public class CodeGenerator implements ASTVisitor {
 
     @Override
     public Object visitWhileStatement(WhileStatement whileStatement, Object arg) throws PLCException {
-        String whileStr = "while(";
-        whileStr += whileStatement.getGuard().visit(this, arg) + ") {\n";
+        String whileStr = "while";
+        Expr guard = whileStatement.getGuard();
+
+        //singlular ident
+        if(guard.getClass() == IdentExpr.class){
+            whileStr += "((" + guard.visit(this, arg) +  "!= 0 ? true: false))";
+        }
+        //binary expression
+        else if (guard.getClass() == BinaryExpr.class){
+            IToken.Kind op = ((BinaryExpr) guard).getOp();
+
+            if (op == IToken.Kind.BITOR || op == IToken.Kind.BITAND || op == IToken.Kind.PLUS || op == IToken.Kind.MINUS|| op == IToken.Kind.TIMES || op == IToken.Kind.DIV || op == IToken.Kind.MOD){
+                whileStr += "((" + guard.visit(this, arg) +  "!= 0 ? true: false))";
+
+            }
+            else{
+                whileStr += "(" + guard.visit(this, arg) + ")";
+            }
+        }
+        else {
+            whileStr += "(" + guard.visit(this, arg) + ")";
+        }
+        whileStr +=  "{\n";
+
+
         tabTracker++;
         whileStr += whileStatement.getBlock().visit(this, arg);
         tabTracker--;
@@ -314,8 +337,20 @@ public class CodeGenerator implements ASTVisitor {
         Expr trueCase = conditionalExpr.getTrueCase();
         Expr falseCase = conditionalExpr.getFalseCase();
 
-        condStr += "((" + guard.visit(this, arg) + ") ? " + trueCase.visit(this, arg) + " : " + falseCase.visit(this, arg) + ")";
+        if(guard.getClass() == IdentExpr.class){
+            condStr += "((" + guard.visit(this, arg) +  "!= 0 ? true: false) ? " + trueCase.visit(this, arg) + " : " + falseCase.visit(this, arg) + ")";
+        }
+        else if (guard.getClass() == BinaryExpr.class){
+            IToken.Kind op = ((BinaryExpr) guard).getOp();
 
+            if (op == IToken.Kind.BITOR || op == IToken.Kind.BITAND || op == IToken.Kind.PLUS || op == IToken.Kind.MINUS|| op == IToken.Kind.TIMES || op == IToken.Kind.DIV || op == IToken.Kind.MOD){
+                condStr += "((" + guard.visit(this, arg) +  "!= 0 ? true: false) ? " + trueCase.visit(this, arg) + " : " + falseCase.visit(this, arg) + ")";
+
+            }
+            else{
+                condStr += "((" + guard.visit(this, arg) + ") ? " + trueCase.visit(this, arg) + " : " + falseCase.visit(this, arg) + ")";
+            }
+        }
         return condStr;
     }
 
