@@ -32,8 +32,6 @@ class Assignment5Test_starter {
         return result;
     }
 
-
-
     // makes it easy to turn output on and off (and less typing thanSystem.out.println)
     static final boolean VERBOSE = true;
     void show(Object obj) {
