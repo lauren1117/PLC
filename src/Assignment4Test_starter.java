@@ -2737,18 +2737,18 @@ void f(){
 		assertTimeoutPreemptively(Duration.ofMillis(TIMEOUT_MILLIS), () -> {
 			String input = """
 				int f(){
-				int i = 3.
-				while i > 0 {
-				   string xx = "hello".
-				   write xx.
-				   i = i -1.
-				}.
-				i = 3.
-				while i > 0 {
-				   write xx.
-				   i = i -1.
-				}.
-				: i.
+					int i = 3.
+					while i > 0 {
+					   string xx = "hello".
+					   write xx.
+					   i = i -1.
+					}.
+					i = 3.
+					while i > 0 {
+					   write xx.
+					   i = i -1.
+					}.
+					: i.
 				}
 """;
 			assertThrows(TypeCheckException.class, () -> {
