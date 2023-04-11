@@ -87,9 +87,19 @@ public class CodeGenerator implements ASTVisitor {
                 decStr += ")";
             }
             else{
-                decStr += exp.visit(this, arg);
+                if(exp.getClass() == BinaryExpr.class) {
+                    IToken.Kind op = ((BinaryExpr) exp).getOp();
+                    if(nameDef.getType() == Type.INT && (op == IToken.Kind.OR || op == IToken.Kind.AND || op == IToken.Kind.LT || op == IToken.Kind.GT || op == IToken.Kind.LE || op == IToken.Kind.GE || op == IToken.Kind.EQ)) {
+                        decStr += "(" + exp.visit(this, arg) + " == true ? 1 : 0)";
+                    }
+                    else {
+                        decStr += exp.visit(this, arg);
+                    }
+                }
+                else {
+                    decStr += exp.visit(this, arg);
+                }
             }
-
         }
 
         decStr += ";\n";
@@ -184,18 +194,24 @@ public class CodeGenerator implements ASTVisitor {
     public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws PLCException {
         Expr exp0 = binaryExpr.getLeft();
         IToken.Kind op = binaryExpr.getOp();
-        Expr ex1 = binaryExpr.getRight();
+        Expr exp1 = binaryExpr.getRight();
         String binStr = "(";
 
         if(op == IToken.Kind.EXP) {
             math = true;
             binStr = "(int)Math.pow(";
             binStr += exp0.visit(this, arg) + ", ";
-            binStr += ex1.visit(this, arg) + ")";
+            binStr += exp1.visit(this, arg) + ")";
             return binStr;
         }
 
-        binStr += (String)exp0.visit(this, arg);
+
+        if(op == IToken.Kind.OR || op == IToken.Kind.AND) {
+            binStr += "(" + exp0.visit(this, arg) + " != 0 ? true : false)";
+        }
+        else {
+            binStr += (String)exp0.visit(this, arg);
+        }
 
         switch(op) {
             case BITOR -> {
@@ -242,9 +258,15 @@ public class CodeGenerator implements ASTVisitor {
             }
         }
 
-        binStr += ex1.visit(this, arg);
-        binStr += ")";
+        if(op == IToken.Kind.OR || op == IToken.Kind.AND) {
+            binStr += exp1.visit(this, arg) + " != 0 ? true : false";
+        }
+        else {
+            binStr += (String)exp1.visit(this, arg);
+        }
 
+
+        binStr += ")";
         return binStr;
     }
 
@@ -298,7 +320,7 @@ public class CodeGenerator implements ASTVisitor {
 
         //singlular ident
         if(guard.getClass() == IdentExpr.class){
-            whileStr += "((" + guard.visit(this, arg) +  "!= 0 ? true: false))";
+            whileStr += "((" + guard.visit(this, arg) +  " != 0 ? true: false))";
         }
         //binary expression
         else if (guard.getClass() == BinaryExpr.class){
