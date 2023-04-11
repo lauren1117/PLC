@@ -549,11 +549,7 @@ public class ASTVisitorClass implements ASTVisitor {
         if(progType == Type.VOID) {
             throw new TypeCheckException("Void program cannot have return value");
         }
-        if(!((exprType == Type.INT || exprType == Type.PIXEL) && ((progType == Type.INT || progType == Type.PIXEL)))) {
-            if (exprType != progType) {
-                throw new TypeCheckException("Return type does not match program type");
-            }
-        }
+        checkAssignTypes(progType, exprType);
 
         return exprType;
     }

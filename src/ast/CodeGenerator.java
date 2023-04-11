@@ -6,9 +6,7 @@ import edu.ufl.cise.plcsp23.TypeCheckException;
 
 import javax.naming.Name;
 import javax.swing.plaf.nimbus.State;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class CodeGenerator implements ASTVisitor {
     Boolean write = false;  //import statements
@@ -252,7 +250,7 @@ public class CodeGenerator implements ASTVisitor {
             }
         }
         unaryStr += unaryExpr.getE().visit(this, arg);
-        unaryStr += ") ";
+        unaryStr += ")";
         return unaryStr;
     }
 
