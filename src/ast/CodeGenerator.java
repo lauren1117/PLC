@@ -103,7 +103,6 @@ public class CodeGenerator implements ASTVisitor {
         }
 
         decStr += ";\n";
-
         return decStr;
     }
 
@@ -120,18 +119,26 @@ public class CodeGenerator implements ASTVisitor {
             assignStr += E.visit(this, arg);
             assignStr += ")";
         }
-        else{
+        else {
+            if(E.getClass() == BinaryExpr.class) {
+                IToken.Kind op = ((BinaryExpr) E).getOp();
+                if(LV.getIdent().getDef().getType() == Type.INT && (op == IToken.Kind.OR || op == IToken.Kind.AND || op == IToken.Kind.LT || op == IToken.Kind.GT || op == IToken.Kind.LE || op == IToken.Kind.GE || op == IToken.Kind.EQ)) {
+                    assignStr += "(" + E.visit(this, arg) + " == true ? 1 : 0)";
+                    assignStr += ";\n";
+                    return assignStr;
+                }
+            }
             assignStr += E.visit(this, arg);
         }
 
         assignStr += ";\n";
-
         return assignStr;
     }
 
     @Override
     public Object visitReturnStatement(ReturnStatement returnStatement, Object arg) throws PLCException {
         String retStr = "return ";
+        Expr exp = returnStatement.getE();
 
         if(returnStatement.getE().getType() == Type.INT && progType == Type.STRING) {
             retStr += "Integer.toString(";
@@ -139,6 +146,14 @@ public class CodeGenerator implements ASTVisitor {
             retStr += ")";
         }
         else {
+            if(exp.getClass() == BinaryExpr.class) {
+                IToken.Kind op = ((BinaryExpr) exp).getOp();
+                if((op == IToken.Kind.OR || op == IToken.Kind.AND || op == IToken.Kind.LT || op == IToken.Kind.GT || op == IToken.Kind.LE || op == IToken.Kind.GE || op == IToken.Kind.EQ)) {
+                    retStr += "(" + exp.visit(this, arg) + " == true ? 1 : 0)";
+                    retStr += ";\n";
+                    return retStr;
+                }
+            }
             retStr += returnStatement.getE().visit(this, arg);
         }
 
