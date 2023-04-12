@@ -194,7 +194,6 @@ public class ASTVisitorClass implements ASTVisitor {
         //visit it so that the check of type of pixelFuncExpr.getSelector() happens and it can throw exception if needed
         pixelFuncExpr.getSelector().visit(this, arg);
 
-
         pixelFuncExpr.setType(Type.INT);
         return pixelFuncExpr.getType();
     }
@@ -371,6 +370,7 @@ public class ASTVisitorClass implements ASTVisitor {
     public Object visitIdentExpr(IdentExpr identExpr, Object arg) throws PLCException {
         //check if identExpr.getName() is defined and visible in scope
         String name = identExpr.getName();
+
         if(table.vars.get(name) == null || table.vars.get(name).getType() == null) {
             throw new TypeCheckException("Idents must be declared before they are used");
         }
@@ -466,7 +466,7 @@ public class ASTVisitorClass implements ASTVisitor {
             throw new TypeCheckException("Idents must be declared before they are used");
         }
         Type tp = null;
-        tp = table.vars.get(name).getType();
+        tp = table.lookup(name).getType();
 
         switch(tp) {
             case IMAGE -> {
@@ -566,8 +566,10 @@ public class ASTVisitorClass implements ASTVisitor {
                 throw new TypeCheckException("Expression resolved to improper type for PIXEL");
             }
         }
+
         else if(LVType == Type.INT) {
             if(EType == Type.IMAGE || EType == Type.VOID || EType == Type.STRING) {
+                System.out.println();
                 throw new TypeCheckException("Expression resolved to improper type for INT");
             }
         }

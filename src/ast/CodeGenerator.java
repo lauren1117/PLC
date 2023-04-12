@@ -187,7 +187,7 @@ public class CodeGenerator implements ASTVisitor {
     @Override
     public Object visitRandomExpr(RandomExpr randomExpr, Object arg) throws PLCException {
         math = true;
-        return "Math.floor(Math.random() * 256)";
+        return "(int)Math.floor(Math.random() * 256)";
     }
 
 
@@ -240,7 +240,7 @@ public class CodeGenerator implements ASTVisitor {
         }
 
 
-        if(op == IToken.Kind.OR || op == IToken.Kind.AND) {
+        if(exp0.getClass() != BinaryExpr.class && (op == IToken.Kind.OR || op == IToken.Kind.AND)) {
             binStr += "(" + exp0.visit(this, arg) + " != 0 ? true : false)";
         }
         else {
@@ -292,7 +292,7 @@ public class CodeGenerator implements ASTVisitor {
             }
         }
 
-        if(op == IToken.Kind.OR || op == IToken.Kind.AND) {
+        if(exp1.getClass() != BinaryExpr.class && (op == IToken.Kind.OR || op == IToken.Kind.AND)) {
             binStr += exp1.visit(this, arg) + " != 0 ? true : false";
         }
         else {
