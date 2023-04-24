@@ -419,7 +419,7 @@ public class CodeGenerator implements ASTVisitor {
         Expr trueCase = conditionalExpr.getTrueCase();
         Expr falseCase = conditionalExpr.getFalseCase();
 
-        if(guard.getClass() == IdentExpr.class || guard.getClass() == NumLitExpr.class){
+        if(guard.getClass() == IdentExpr.class || guard.getClass() == NumLitExpr.class || guard.getClass() == ZExpr.class){
             condStr += "((" + guard.visit(this, arg) +  "!= 0 ? true: false) ? " + trueCase.visit(this, arg) + " : " + falseCase.visit(this, arg) + ")";
         }
         else if (guard.getClass() == BinaryExpr.class){
@@ -432,6 +432,9 @@ public class CodeGenerator implements ASTVisitor {
             else{
                 condStr += "((" + guard.visit(this, arg) + ") ? " + trueCase.visit(this, arg) + " : " + falseCase.visit(this, arg) + ")";
             }
+        }
+        else {
+            condStr += "((" + guard.visit(this, arg) + ") ? " + trueCase.visit(this, arg) + " : " + falseCase.visit(this, arg) + ")";
         }
         return condStr;
     }
