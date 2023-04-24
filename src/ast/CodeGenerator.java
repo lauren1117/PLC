@@ -77,6 +77,7 @@ public class CodeGenerator implements ASTVisitor {
             blockStr += s.visit(this, arg);
         }
 
+        removeVars();
         scope.pop();
         return blockStr;
     }
@@ -484,6 +485,24 @@ public class CodeGenerator implements ASTVisitor {
         }
 
         return null;
+    }
+
+    public void removeVars() {
+        Iterator<String> namesIterator = names.iterator();
+        ArrayList<String> arrNames = new ArrayList<String>();
+
+        while(namesIterator.hasNext()) {
+            arrNames.add(namesIterator.next());
+        }
+        for(String name : arrNames) {
+            String last2char = name.length() > 2 ? name.substring(name.length() - 2) : name;
+            System.out.println(name);
+            System.out.println(last2char);
+            if(last2char.equals("_" + Integer.toString(scope.peek()))) {
+                names.remove(name);
+            }
+        }
+        System.out.println("\n\n");
     }
 
 }
