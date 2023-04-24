@@ -177,7 +177,7 @@ public class CodeGenerator implements ASTVisitor {
 
     @Override
     public Object visitNameDef(NameDef nameDef, Object arg) throws PLCException {
-        String name = nameDef.getIdent().getName() + Integer.toString(scope.peek());
+        String name = nameDef.getIdent().getName() + "_" + Integer.toString(scope.peek());
         names.add(name);
         String defStr = getString(nameDef.getType());
         defStr += " " + name;
@@ -352,6 +352,8 @@ public class CodeGenerator implements ASTVisitor {
         String whileStr = "while";
         Expr guard = whileStatement.getGuard();
 
+        Set<String> before = names;
+
         //singlular ident
         if(guard.getClass() == IdentExpr.class){
             whileStr += "((" + guard.visit(this, arg) +  " != 0 ? true: false))";
@@ -393,7 +395,7 @@ public class CodeGenerator implements ASTVisitor {
         Expr trueCase = conditionalExpr.getTrueCase();
         Expr falseCase = conditionalExpr.getFalseCase();
 
-        if(guard.getClass() == IdentExpr.class){
+        if(guard.getClass() == IdentExpr.class || guard.getClass() == NumLitExpr.class){
             condStr += "((" + guard.visit(this, arg) +  "!= 0 ? true: false) ? " + trueCase.visit(this, arg) + " : " + falseCase.visit(this, arg) + ")";
         }
         else if (guard.getClass() == BinaryExpr.class){
@@ -445,7 +447,7 @@ public class CodeGenerator implements ASTVisitor {
     public String getVarName(String name) {
 
         for(int i = scope.peek(); i > 0; i--) {
-            String n = name + Integer.toString(i);
+            String n = name + "_" + Integer.toString(i);
             if(names.contains(n)) {
                 return n;
             }
