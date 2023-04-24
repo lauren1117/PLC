@@ -386,7 +386,7 @@ public class CodeGenerator implements ASTVisitor {
         else if (guard.getClass() == BinaryExpr.class){
             IToken.Kind op = ((BinaryExpr) guard).getOp();
 
-            if (op == IToken.Kind.BITOR || op == IToken.Kind.BITAND || op == IToken.Kind.PLUS || op == IToken.Kind.MINUS|| op == IToken.Kind.TIMES || op == IToken.Kind.DIV || op == IToken.Kind.MOD){
+            if (op == IToken.Kind.BITOR || op == IToken.Kind.BITAND || op == IToken.Kind.PLUS || op == IToken.Kind.MINUS|| op == IToken.Kind.TIMES || op == IToken.Kind.DIV || op == IToken.Kind.MOD || op == IToken.Kind.EXP){
                 whileStr += "((" + guard.visit(this, arg) +  "!= 0 ? true: false))";
 
             }
@@ -425,7 +425,7 @@ public class CodeGenerator implements ASTVisitor {
         else if (guard.getClass() == BinaryExpr.class){
             IToken.Kind op = ((BinaryExpr) guard).getOp();
 
-            if (op == IToken.Kind.BITOR || op == IToken.Kind.BITAND || op == IToken.Kind.PLUS || op == IToken.Kind.MINUS|| op == IToken.Kind.TIMES || op == IToken.Kind.DIV || op == IToken.Kind.MOD){
+            if (op == IToken.Kind.BITOR || op == IToken.Kind.BITAND || op == IToken.Kind.PLUS || op == IToken.Kind.MINUS|| op == IToken.Kind.TIMES || op == IToken.Kind.DIV || op == IToken.Kind.MOD || op == IToken.Kind.EXP){
                 condStr += "((" + guard.visit(this, arg) +  "!= 0 ? true: false) ? " + trueCase.visit(this, arg) + " : " + falseCase.visit(this, arg) + ")";
 
             }
