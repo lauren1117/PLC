@@ -13,6 +13,7 @@ public class CodeGenerator implements ASTVisitor {
     Boolean math = false;
     Type progType = null;
     int tabTracker = 2;   //formatting
+    HashSet<IToken.Kind> boolOps = new HashSet<>(Arrays.asList(IToken.Kind.OR, IToken.Kind.AND, IToken.Kind.LT, IToken.Kind.LE, IToken.Kind.GT, IToken.Kind.GE, IToken.Kind.EQ));
 
     Set<String> names = new HashSet<String>();
     Stack<Integer> scope = new Stack<Integer>();
@@ -242,6 +243,29 @@ public class CodeGenerator implements ASTVisitor {
 
         if(exp0.getClass() != BinaryExpr.class && (op == IToken.Kind.OR || op == IToken.Kind.AND)) {
             binStr += "(" + exp0.visit(this, arg) + " != 0 ? true : false)";
+        }
+        else if(exp0.getClass() == BinaryExpr.class) {
+            IToken.Kind leftOp = ((BinaryExpr) exp0).getOp();
+
+            //left operand has boolean op but parent expression is non bool
+            //ex (i0 > 0 || i1 > 0) * 5
+            if(boolOps.contains(leftOp)) {
+                if(!(op == IToken.Kind.OR || op == IToken.Kind.AND)) {
+                    binStr += "(" + exp0.visit(this, arg) + " ? 1 : 0) ";
+                }
+                else {
+                    binStr += (String)exp0.visit(this, arg);
+                }
+            }
+            //inverse of above
+            else {
+                if((op == IToken.Kind.OR || op == IToken.Kind.AND)) {
+                    binStr += "(" + exp0.visit(this, arg) + " != 0 ? true : false)";
+                }
+                else {
+                    binStr += (String)exp0.visit(this, arg);
+                }
+            }
         }
         else {
             binStr += (String)exp0.visit(this, arg);
