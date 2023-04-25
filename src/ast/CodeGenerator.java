@@ -20,6 +20,7 @@ public class CodeGenerator implements ASTVisitor {
     Type progType = null;
     int tabTracker = 2;   //formatting
     HashSet<IToken.Kind> boolOps = new HashSet<>(Arrays.asList(IToken.Kind.OR, IToken.Kind.AND, IToken.Kind.LT, IToken.Kind.LE, IToken.Kind.GT, IToken.Kind.GE, IToken.Kind.EQ));
+    HashSet<IToken.Kind> imgOps = new HashSet<>(Arrays.asList(IToken.Kind.PLUS, IToken.Kind.MINUS, IToken.Kind.TIMES, IToken.Kind.DIV, IToken.Kind.MOD));
 
     Set<String> names = new HashSet<String>();
     Stack<Integer> scope = new Stack<Integer>();
@@ -144,13 +145,11 @@ public class CodeGenerator implements ASTVisitor {
                     }
                     else {
                         imgOp = true;
-                        if(exp.getClass() == ExpandedPixelExpr.class) {
-                            decStr += "ImageOps.makeImage(" + nameDef.getDimension().getWidth().visit(this, arg) + ", " + nameDef.getDimension().getHeight().visit(this, arg) + ");\n";
-                            for(int i = 0; i < tabTracker; i++) {
-                                decStr += "\t";
-                            }
-                            decStr += "ImageOps.setAllPixels(" + nameDef.getIdent().visit(this, arg) + ", " + exp.visit(this, arg) + ")";
+                        decStr += "ImageOps.makeImage(" + nameDef.getDimension().getWidth().visit(this, arg) + ", " + nameDef.getDimension().getHeight().visit(this, arg) + ");\n";
+                        for(int i = 0; i < tabTracker; i++) {
+                            decStr += "\t";
                         }
+                        decStr += "ImageOps.setAllPixels(" + nameDef.getIdent().visit(this, arg) + ", " + exp.visit(this, arg) + ")";
                     }
                 }
             }
@@ -197,6 +196,22 @@ public class CodeGenerator implements ASTVisitor {
             assignStr += "Integer.toString(";
             assignStr += E.visit(this, arg);
             assignStr += ")";
+        }
+
+        else if(LV.getIdent().getDef().getType() == Type.IMAGE) {
+            imgOp = true;
+            fileURL = true;
+            if(LV.getPixelSelector() == null && LV.getColor() == null) {
+                if(E.getType() == Type.STRING) {
+                    assignStr = "ImageOps.copyInto(FileURLIO.readImage(" + E.visit(this, arg) + "), " + LV.getIdent().visit(this, arg) + ")";
+                }
+                else if(E.getType() == Type.IMAGE) {
+                    assignStr = "ImageOps.copyInto(" + E.visit(this, arg) + ", " + LV.getIdent().visit(this, arg) + ")";
+                }
+                else if(E.getType() == Type.PIXEL) {
+                    assignStr = "ImageOps.setAllPixels(" + LV.getIdent().visit(this, arg) + ", " + E.visit(this, arg) + ")";
+                }
+            }
         }
         else {
             if(E.getClass() == BinaryExpr.class) {
@@ -301,6 +316,7 @@ public class CodeGenerator implements ASTVisitor {
         Expr exp1 = binaryExpr.getRight();
         String binStr = "(";
 
+        //operator is exponent
         if(op == IToken.Kind.EXP) {
             math = true;
             binStr = "(int)Math.pow(";
@@ -309,6 +325,33 @@ public class CodeGenerator implements ASTVisitor {
             return binStr;
         }
 
+        //if operator is valid for image
+        if(imgOps.contains(op)) {
+            imgOp = true;
+            //lhs is image
+            if (exp0.getType() == Type.IMAGE) {
+                //rhs is image
+                if (exp1.getType() == Type.IMAGE) {
+                    binStr += "ImageOps.binaryImageImageOp(ImageOps.OP." + op.name() + ", " + binaryExpr.getLeft().visit(this,arg) + ", " + binaryExpr.getRight().visit(this, arg) + "))";
+                }
+                //lhs is int
+                else if (exp1.getType() == Type.INT) {
+                    binStr += "ImageOps.binaryImageScalarOp(ImageOps.OP." + op.name() + ", " + binaryExpr.getLeft().visit(this,arg) + ", " + binaryExpr.getRight().visit(this, arg) + "))";
+                }
+                return binStr;
+            }
+
+            //lhs and rhs are pixel
+            else if(exp0.getType() == Type.PIXEL) {
+                if(exp1.getType() == Type.PIXEL) {
+                    binStr += "ImageOps.binaryPackedPixelPixelOp(ImageOps.OP." + op.name() + ", " + binaryExpr.getLeft().visit(this, arg) + ", " + binaryExpr.getRight().visit(this, arg) + "))";
+                }
+                else if(exp1.getType() == Type.INT) {
+                    binStr += "ImageOps.binaryPackedPixelIntOp(ImageOps.OP." + op.name() + ", " + binaryExpr.getLeft().visit(this, arg) + ", " + binaryExpr.getRight().visit(this, arg) + "))";
+                }
+                return binStr;
+            }
+        }
 
         if(exp0.getClass() != BinaryExpr.class && (op == IToken.Kind.OR || op == IToken.Kind.AND)) {
             binStr += "(" + exp0.visit(this, arg) + " != 0 ? true : false)";
@@ -340,50 +383,7 @@ public class CodeGenerator implements ASTVisitor {
             binStr += (String)exp0.visit(this, arg);
         }
 
-        switch(op) {
-            case BITOR -> {
-                binStr += " | ";
-            }
-            case BITAND -> {
-                binStr += " & ";
-            }
-            case OR -> {
-                binStr += " || ";
-            }
-            case AND -> {
-                binStr += " && ";
-            }
-            case LT -> {
-                binStr += " < ";
-            }
-            case GT -> {
-                binStr += " > ";
-            }
-            case LE -> {
-                binStr += " <= ";
-            }
-            case GE -> {
-                binStr += " >= ";
-            }
-            case EQ -> {
-                binStr += " == ";
-            }
-            case PLUS -> {
-                binStr += " + ";
-            }
-            case MINUS -> {
-                binStr += " - ";
-            }
-            case TIMES -> {
-                binStr += " * ";
-            }
-            case DIV -> {
-                binStr += " / ";
-            }
-            case MOD -> {
-                binStr += " % ";
-            }
-        }
+        binStr += getOpString(op);
 
         if(exp1.getClass() != BinaryExpr.class && (op == IToken.Kind.OR || op == IToken.Kind.AND)) {
             binStr += exp1.visit(this, arg) + " != 0 ? true : false";
@@ -438,8 +438,33 @@ public class CodeGenerator implements ASTVisitor {
 
     @Override
     public Object visitUnaryExprPostFix(UnaryExprPostfix unaryExprPostfix, Object arg) throws PLCException {
-
-        return null;
+        String unaryStr = "";
+        if(unaryExprPostfix.getPrimary().getType() == Type.IMAGE) {
+            imgOp = true;
+            if(unaryExprPostfix.getPixel() != null) {
+                if(unaryExprPostfix.getColor() == null) {
+                    unaryStr += "ImageOps.getRGB(" + unaryExprPostfix.getPrimary().visit(this,arg) + ", " + unaryExprPostfix.getPixel().visit(this, arg) + ")";
+                }
+                else {
+                    pixelOp = true;
+                    unaryStr += "PixelOps." + unaryExprPostfix.getColor().name() + "(" + "ImageOps.getRGB(" + unaryExprPostfix.getPrimary().visit(this,arg) + ", " + unaryExprPostfix.getPixel().visit(this, arg) + ")" + ")";
+                }
+            }
+            else {
+                if(unaryExprPostfix.getColor() != null) {
+                    unaryStr += "ImageOps.extract";
+                    String color = unaryExprPostfix.getColor().name().substring(0, 1).toUpperCase() + unaryExprPostfix.getColor().name().substring(1);
+                    unaryStr += color + "(" + unaryExprPostfix.getPrimary().visit(this, arg) + ")";
+                }
+            }
+        }
+        else if(unaryExprPostfix.getPrimary().getType() == Type.PIXEL) {
+            if(unaryExprPostfix.getColor() != null) {
+                pixelOp = true;
+                unaryStr += "PixelOps." + unaryExprPostfix.getColor().name() + "(" + unaryExprPostfix.getPrimary().visit(this, arg) + ")";
+            }
+        }
+        return unaryStr;
     }
 
     @Override
@@ -534,7 +559,7 @@ public class CodeGenerator implements ASTVisitor {
 
     @Override
     public Object visitPixelSelector(PixelSelector pixelSelector, Object arg) throws PLCException {
-        return null;
+        return pixelSelector.getX().visit(this, arg) + ", " + pixelSelector.getY().visit(this, arg);
     }
 
     @Override
@@ -583,6 +608,54 @@ public class CodeGenerator implements ASTVisitor {
                 names.remove(name);
             }
         }
+    }
+
+    public String getOpString(IToken.Kind k) {
+        switch(k) {
+            case BITOR -> {
+                return " | ";
+            }
+            case BITAND -> {
+                return " & ";
+            }
+            case OR -> {
+                return " || ";
+            }
+            case AND -> {
+                return " && ";
+            }
+            case LT -> {
+                return " < ";
+            }
+            case GT -> {
+                return " > ";
+            }
+            case LE -> {
+                return " <= ";
+            }
+            case GE -> {
+                return " >= ";
+            }
+            case EQ -> {
+                return " == ";
+            }
+            case PLUS -> {
+                return " + ";
+            }
+            case MINUS -> {
+                return " - ";
+            }
+            case TIMES -> {
+                return " * ";
+            }
+            case DIV -> {
+                return " / ";
+            }
+            case MOD -> {
+                return " % ";
+            }
+        }
+        return "";
     }
 
 }
