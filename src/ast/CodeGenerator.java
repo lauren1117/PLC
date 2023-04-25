@@ -127,7 +127,8 @@ public class CodeGenerator implements ASTVisitor {
                     if (exp.getType() == Type.STRING) {
                         fileURL = true;
                         decStr += "FileURLIO.readImage(" + exp.visit(this, arg) + ")";
-                    } else if (exp.getType() == Type.IMAGE) {
+                    }
+                    else if (exp.getType() == Type.IMAGE) {
                         imgOp = true;
                         decStr += "ImageOps.cloneImage(" + exp.visit(this, arg) + ")";
                     }
@@ -136,9 +137,20 @@ public class CodeGenerator implements ASTVisitor {
                     if (exp.getType() == Type.STRING) {
                         fileURL = true;
                         decStr += "FileURLIO.readImage(" + exp.visit(this, arg) + ", " + nameDef.getDimension().getWidth().visit(this, arg) + ", " + nameDef.getDimension().getHeight().visit(this, arg) + ")";
-                    } else if (exp.getType() == Type.IMAGE) {
+                    }
+                    else if (exp.getType() == Type.IMAGE) {
                         imgOp = true;
                         decStr += "ImageOps.copyAndResize(" + exp.visit(this, arg) + ", " + nameDef.getDimension().getWidth().visit(this, arg) + ", " + nameDef.getDimension().getHeight().visit(this, arg) + ")";
+                    }
+                    else {
+                        imgOp = true;
+                        if(exp.getClass() == ExpandedPixelExpr.class) {
+                            decStr += "ImageOps.makeImage(" + nameDef.getDimension().getWidth().visit(this, arg) + ", " + nameDef.getDimension().getHeight().visit(this, arg) + ");\n";
+                            for(int i = 0; i < tabTracker; i++) {
+                                decStr += "\t";
+                            }
+                            decStr += "ImageOps.setAllPixels(" + nameDef.getIdent().visit(this, arg) + ", " + exp.visit(this, arg) + ")";
+                        }
                     }
                 }
             }
@@ -426,6 +438,7 @@ public class CodeGenerator implements ASTVisitor {
 
     @Override
     public Object visitUnaryExprPostFix(UnaryExprPostfix unaryExprPostfix, Object arg) throws PLCException {
+
         return null;
     }
 
@@ -506,7 +519,12 @@ public class CodeGenerator implements ASTVisitor {
 
     @Override
     public Object visitExpandedPixelExpr(ExpandedPixelExpr expandedPixelExpr, Object arg) throws PLCException {
-        return null;
+        pixelOp = true;
+        String pix = "PixelOps.pack(";
+        pix += expandedPixelExpr.getRedExpr().visit(this, arg) + ", ";
+        pix += expandedPixelExpr.getGrnExpr().visit(this, arg) + ", ";
+        pix += expandedPixelExpr.getBluExpr().visit(this, arg) + ")";
+        return pix;
     }
 
     @Override
