@@ -39,7 +39,7 @@ class Assignment6Test_starter {
 	}
 
 	static final boolean VERBOSE = true;
-	static final boolean WAIT_FOR_INPUT = true;
+	static final boolean WAIT_FOR_INPUT = false; //changed to false
 
 	/**
 	 * This waits for input to prevent Junit and your IDE from closing the window
@@ -74,7 +74,7 @@ class Assignment6Test_starter {
 	 * 
 	 * @param obj
 	 */
-	void show(Object obj) {
+	void show(Object obj)  {
 		if (VERBOSE) {
 			System.out.println(obj);
 		}

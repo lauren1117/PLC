@@ -6,11 +6,17 @@ import edu.ufl.cise.plcsp23.TypeCheckException;
 
 import javax.naming.Name;
 import javax.swing.plaf.nimbus.State;
+import java.awt.image.BufferedImage;
 import java.util.*;
 
 public class CodeGenerator implements ASTVisitor {
     Boolean write = false;  //import statements
     Boolean math = false;
+    Boolean imgOp = false;
+    Boolean fileURL = false;
+    Boolean pixelOp = false;
+    Boolean buffImage = false;
+
     Type progType = null;
     int tabTracker = 2;   //formatting
     HashSet<IToken.Kind> boolOps = new HashSet<>(Arrays.asList(IToken.Kind.OR, IToken.Kind.AND, IToken.Kind.LT, IToken.Kind.LE, IToken.Kind.GT, IToken.Kind.GE, IToken.Kind.EQ));
@@ -47,6 +53,18 @@ public class CodeGenerator implements ASTVisitor {
 
         if(write) {
             javaCode = "import edu.ufl.cise.plcsp23.runtime.ConsoleIO;\n" + javaCode;
+        }
+        if(imgOp) {
+            javaCode = "import edu.ufl.cise.plcsp23.runtime.ImageOps;\n" + javaCode;
+        }
+        if(fileURL) {
+            javaCode = "import edu.ufl.cise.plcsp23.runtime.FileURLIO;\n" + javaCode;
+        }
+        if(pixelOp) {
+            javaCode = "import edu.ufl.cise.plcsp23.runtime.PixelOps;\n" + javaCode;
+        }
+        if(buffImage) {
+            javaCode = "import java.awt.image.BufferedImage;\n" + javaCode;
         }
         if(math) {
             javaCode = "import java.lang.Math;\n" + javaCode;
@@ -86,9 +104,14 @@ public class CodeGenerator implements ASTVisitor {
     public Object visitDeclaration(Declaration declaration, Object arg) throws PLCException {
         NameDef nameDef = declaration.getNameDef();
         Expr exp = declaration.getInitializer();
+        String dimStr = null;
 
         String decStr = (String)nameDef.visit(this, arg);
 
+        if(nameDef.getDimension() != null) {
+        }
+
+        //initializer exists
         if (exp != null) {
             decStr += " = ";
 
@@ -97,7 +120,30 @@ public class CodeGenerator implements ASTVisitor {
                 decStr += exp.visit(this, arg);
                 decStr += ")";
             }
-            else{
+
+            else if(nameDef.getType() == Type.IMAGE) {
+                buffImage = true;
+                if(nameDef.getDimension() == null) {
+                    if (exp.getType() == Type.STRING) {
+                        fileURL = true;
+                        decStr += "FileURLIO.readImage(" + exp.visit(this, arg) + ")";
+                    } else if (exp.getType() == Type.IMAGE) {
+                        imgOp = true;
+                        decStr += "ImageOps.cloneImage(" + exp.visit(this, arg) + ")";
+                    }
+                }
+                else {
+                    if (exp.getType() == Type.STRING) {
+                        fileURL = true;
+                        decStr += "FileURLIO.readImage(" + exp.visit(this, arg) + ", " + nameDef.getDimension().getWidth().visit(this, arg) + ", " + nameDef.getDimension().getHeight().visit(this, arg) + ")";
+                    } else if (exp.getType() == Type.IMAGE) {
+                        imgOp = true;
+                        decStr += "ImageOps.copyAndResize(" + exp.visit(this, arg) + ", " + nameDef.getDimension().getWidth().visit(this, arg) + ", " + nameDef.getDimension().getHeight().visit(this, arg) + ")";
+                    }
+                }
+            }
+
+            else {
                 if(exp.getClass() == BinaryExpr.class) {
                     IToken.Kind op = ((BinaryExpr) exp).getOp();
                     if(nameDef.getType() == Type.INT && (op == IToken.Kind.OR || op == IToken.Kind.AND || op == IToken.Kind.LT || op == IToken.Kind.GT || op == IToken.Kind.LE || op == IToken.Kind.GE || op == IToken.Kind.EQ)) {
@@ -110,6 +156,16 @@ public class CodeGenerator implements ASTVisitor {
                 else {
                     decStr += exp.visit(this, arg);
                 }
+            }
+        }
+        else if(nameDef.getType() == Type.IMAGE) {
+            buffImage = true;
+            if(nameDef.getDimension() == null ) {
+                throw new TypeCheckException("Image without initializer requires a dimension");
+            }
+            else {
+                imgOp = true;
+                decStr += " = ImageOps.makeImage(" + nameDef.getDimension().getWidth().visit(this, arg) + ", " + nameDef.getDimension().getHeight().visit(this, arg) + ")";
             }
         }
 
@@ -362,6 +418,7 @@ public class CodeGenerator implements ASTVisitor {
                 unaryStr += "Math.atan(";
             }
         }
+
         unaryStr += unaryExpr.getE().visit(this, arg);
         unaryStr += ")";
         return unaryStr;
@@ -442,7 +499,9 @@ public class CodeGenerator implements ASTVisitor {
 
     @Override
     public Object visitDimension(Dimension dimension, Object arg) throws PLCException {
-        return null;
+        String dim = (String)dimension.getWidth().visit(this, arg);
+        dim += "," + dimension.getHeight().visit(this, arg);
+        return dim;
     }
 
     @Override
@@ -468,6 +527,12 @@ public class CodeGenerator implements ASTVisitor {
     public String getString(Type tp) {
         if(tp == Type.STRING) {
             return "String";
+        }
+        else if(tp == Type.PIXEL) {
+            return "int";
+        }
+        else if(tp == Type.IMAGE) {
+            return "BufferedImage";
         }
         return tp.toString().toLowerCase();
     }
@@ -496,13 +561,10 @@ public class CodeGenerator implements ASTVisitor {
         }
         for(String name : arrNames) {
             String last2char = name.length() > 2 ? name.substring(name.length() - 2) : name;
-            System.out.println(name);
-            System.out.println(last2char);
             if(last2char.equals("_" + Integer.toString(scope.peek()))) {
                 names.remove(name);
             }
         }
-        System.out.println("\n\n");
     }
 
 }

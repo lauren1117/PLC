@@ -17,11 +17,15 @@ public class Dimension extends AST {
 
 	final Expr width;
 	final Expr height;
+	Integer w;
+	Integer h;
 
 	public Dimension(IToken firstToken, Expr width, Expr height) {
 		super(firstToken);
 		this.width = width;
 		this.height = height;
+		this.w = 0;
+		this.h = 0;
 	}
 
 	@Override
@@ -36,6 +40,14 @@ public class Dimension extends AST {
 
 	public Expr getHeight() {
 		return height;
+	}
+
+	public void setWidth(Integer _w) {
+		this.w = _w;
+	}
+
+	public void setHeight(Integer _h) {
+		this.h = _h;
 	}
 
 	@Override

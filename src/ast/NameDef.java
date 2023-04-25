@@ -47,7 +47,5 @@ public class NameDef extends AST {
 	public String toString() {
 		return "NameDef [type=" + type + ", dimension=" + dimension + ", ident=" + ident + "]";
 	}
-
-	
 	
 }
