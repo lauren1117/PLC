@@ -109,8 +109,6 @@ public class CodeGenerator implements ASTVisitor {
 
         String decStr = (String)nameDef.visit(this, arg);
 
-        if(nameDef.getDimension() != null) {
-        }
 
         //initializer exists
         if (exp != null) {
@@ -169,6 +167,7 @@ public class CodeGenerator implements ASTVisitor {
                 }
             }
         }
+
         else if(nameDef.getType() == Type.IMAGE) {
             buffImage = true;
             if(nameDef.getDimension() == null ) {
@@ -189,6 +188,8 @@ public class CodeGenerator implements ASTVisitor {
         String assignStr = "";
         LValue LV = statementAssign.getLv();
         Expr E = statementAssign.getE();
+        String idName = (String) LV.getIdent().visit(this, arg);
+
 
         assignStr += LV.visit(this, arg);
         assignStr += " = ";
@@ -201,7 +202,15 @@ public class CodeGenerator implements ASTVisitor {
         else if(LV.getIdent().getDef().getType() == Type.IMAGE) {
             imgOp = true;
             fileURL = true;
-            if(LV.getPixelSelector() == null && LV.getColor() == null) {
+
+            String ht = "";
+            String wt = "";
+            if(LV.getIdent().getDef().getDimension() != null) {
+                ht = (String) LV.getIdent().getDef().getDimension().getHeight().visit(this, arg);
+                wt = (String) LV.getIdent().getDef().getDimension().getWidth().visit(this, arg);
+            }
+
+            if(LV.getPixelSelector() == null) {
                 if(E.getType() == Type.STRING) {
                     assignStr = "ImageOps.copyInto(FileURLIO.readImage(" + E.visit(this, arg) + "), " + LV.getIdent().visit(this, arg) + ")";
                 }
@@ -211,6 +220,38 @@ public class CodeGenerator implements ASTVisitor {
                 else if(E.getType() == Type.PIXEL) {
                     assignStr = "ImageOps.setAllPixels(" + LV.getIdent().visit(this, arg) + ", " + E.visit(this, arg) + ")";
                 }
+            }
+            //pixel selector not empty
+            else {
+                assignStr = "for(int y = 0; y < " + idName + ".getHeight(); y++) {\n";
+                for(int i = 0; i < tabTracker + 1; i++) {
+                    assignStr += "\t";
+                }
+                assignStr += "for(int x = 0; x < " + idName + ".getWidth(); x++) {\n";
+                for(int i = 0; i < tabTracker + 2; i++) {
+                    assignStr += "\t";
+                }
+
+                //color channel empty
+                if(LV.getColor() == null) {
+                    assignStr += "ImageOps.setRGB(" + idName + ", " + wt + ", " + ht + ", " + E.visit(this, arg) + ");\n";
+                }
+                //color channel not empty
+                else {
+                    String color = LV.getColor().name().substring(0, 1).toUpperCase() + LV.getColor().name().substring(1);
+                    assignStr += "ImageOps.setRGB(" + idName + ", " + wt + ", " + ht;
+                    assignStr += ", PixelOps.set" + color + "(ImageOps.getRGB(" + idName + ", " + wt + ", " + ht + "), ";
+                    assignStr += E.visit(this, arg) + "));\n";
+                }
+                for(int i = 0; i < tabTracker + 1; i++) {
+                    assignStr += "\t";
+                }
+                assignStr += "}\n";
+                for(int i = 0; i < tabTracker; i++) {
+                    assignStr += "\t";
+                }
+                assignStr += "}\n";
+                return assignStr;
             }
         }
         else {
@@ -564,7 +605,7 @@ public class CodeGenerator implements ASTVisitor {
 
     @Override
     public Object visitPredeclaredVarExpr(PredeclaredVarExpr predeclaredVarExpr, Object arg) throws PLCException {
-        return null;
+        return predeclaredVarExpr.firstToken.getTokenString();
     }
 
     public String getString(Type tp) {

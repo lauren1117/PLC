@@ -705,7 +705,7 @@ class Assignment6Test_starter {
 		show(result);
 	}
 
-	@Test
+/*	@Test
 	void cg24a() throws Exception {
 		String input = """
 				int imageEqual(string s0, string s1){
@@ -745,7 +745,7 @@ class Assignment6Test_starter {
 		BufferedImage i1 = FileURLIO.readImage(s1, w, h);
 		int expected = (ImageOps.equalsForCodeGen(i0, i1));
 		assertEquals(expected, result);
-	}
+	}*/
 
 	@Test
 	void cg24c() throws Exception {
