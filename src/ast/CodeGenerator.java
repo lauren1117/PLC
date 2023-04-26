@@ -117,6 +117,18 @@ public class CodeGenerator implements ASTVisitor {
             if ((nameDef.getType() == Type.STRING && exp.getType() == Type.INT)){
                 decStr += "Integer.toString(";
                 decStr += exp.visit(this, arg);
+                if(exp.getClass() == UnaryExpr.class) {
+                    IToken.Kind op = ((UnaryExpr) exp).getOp();
+                    if(op == IToken.Kind.BANG) {
+                        decStr += " ? 1 : 0";
+                    }
+                }
+                if(exp.getClass() == BinaryExpr.class) {
+                    IToken.Kind op = ((BinaryExpr) exp).getOp();
+                    if(boolOps.contains(op)) {
+                        decStr += " ? 1 : 0";
+                    }
+                }
                 decStr += ")";
             }
 
@@ -196,6 +208,12 @@ public class CodeGenerator implements ASTVisitor {
         if ((LV.getIdent().getDef().getType() == Type.STRING && E.getType() == Type.INT)){
             assignStr += "Integer.toString(";
             assignStr += E.visit(this, arg);
+            if(E.getClass() == UnaryExpr.class) {
+                IToken.Kind op = ((UnaryExpr) E).getOp();
+                if(op == IToken.Kind.BANG) {
+                    assignStr += " ? 1 : 0";
+                }
+            }
             assignStr += ")";
         }
 
@@ -473,6 +491,9 @@ public class CodeGenerator implements ASTVisitor {
         }
 
         unaryStr += unaryExpr.getE().visit(this, arg);
+        if(op == IToken.Kind.BANG && unaryExpr.getE().getType() == Type.INT) {
+            unaryStr += "== 0 ? false : true";
+        }
         unaryStr += ")";
         return unaryStr;
     }
