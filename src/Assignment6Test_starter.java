@@ -1,8 +1,5 @@
 package edu.ufl.cise.plcsp23;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 
@@ -16,6 +13,9 @@ import edu.ufl.cise.plcsp23.runtime.ConsoleIO;
 import edu.ufl.cise.plcsp23.runtime.FileURLIO;
 import edu.ufl.cise.plcsp23.runtime.ImageOps;
 import edu.ufl.cise.plcsp23.runtime.PixelOps;
+import edu.ufl.cise.plcsp23.runtime.ImageOps.OP;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class Assignment6Test_starter {
 
@@ -1028,5 +1028,451 @@ class Assignment6Test_starter {
 		imageEquals(result, expected);
 		show(result);
 	}
+
+	@Test
+	void andPixelsArtInts() throws Exception {
+		String input = """
+				int p() {
+					pixel p = [2,3,5].
+					:p.
+				}
+				""";
+		Object[] params = {};
+		int result = (int) genCodeAndRun(input, "", params);
+		assertEquals(-16_645_371, result);
+	}
+
+	@Test
+	void andIntsArePixels() throws Exception {
+		String input = """
+				pixel p() {
+					int i = -16645371.
+					:i.
+				}
+				""";
+		Object[] params = {};
+		int result = (int) genCodeAndRun(input, "", params);
+		assertEquals(PixelOps.pack(2, 3, 5), result);
+	}
+
+	//@Test
+	/*void andPixelsToStrings() throws Exception {
+		String input = """
+				string p() {
+					pixel p = [2,3,5].
+					write p.
+					:p.
+				}
+				""";
+		Object[] params = {};
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		PrintStream test = new PrintStream(baos);
+		ConsoleIO.setConsole(test);
+		String result = (String) genCodeAndRun(input, "", params);
+		String output = baos.toString();
+		assertEquals("ff020305", result);
+		assertTrue(output.equals("ff020305\n") || output.equals("ff020305\r\n"));
+	}*/
+
+	@Test
+	void andImageCopying() throws Exception {
+		String input = """
+				image p(string s) {
+					image m1 = s.
+					image m2 = m1.
+					:m2.
+				}
+				""";
+		Object[] params = { owl };
+		BufferedImage result = (BufferedImage) genCodeAndRun(input, "", params);
+		imageEquals(FileURLIO.readImage(owl), result);
+	}
+
+	@Test
+	void andImagesFromPixels() throws Exception {
+		String input = """
+				image p(pixel p) {
+					image[50,50] m = p.
+					write m.
+					:m.
+				}
+				""";
+		Object[] params = { 0xfffcba03 };
+		BufferedImage result = (BufferedImage) genCodeAndRun(input, "", params);
+		imageEquals(ImageOps.setAllPixels(ImageOps.makeImage(50, 50), 0xfffcba03), result);
+	}
+
+	@Test
+	void andImageAndImage() throws Exception {
+		String input;
+		Object[] params = { 0xfffcba03, 0xffad49d1 };
+		BufferedImage img1 = ImageOps.setAllPixels(ImageOps.makeImage(50, 50), (Integer) params[0]);
+		BufferedImage img2 = ImageOps.setAllPixels(ImageOps.makeImage(50, 50), (Integer) params[1]);
+		BufferedImage result;
+		BufferedImage expected;
+
+		input = """
+				image p(pixel p1, pixel p2) {
+					image[50,50] m1 = p1.
+					image[50,50] m2 = p2.
+					image m3 = m1 + m2.
+					:m3.
+				}
+				""";
+		result = (BufferedImage) genCodeAndRun(input, "", params);
+		expected = ImageOps.binaryImageImageOp(OP.PLUS, img1, img2);
+		imageEquals(expected, result);
+		input = """
+				image p(pixel p1, pixel p2) {
+					image[50,50] m1 = p1.
+					image[50,50] m2 = p2.
+					image m3 = m1 - m2.
+					:m3.
+				}
+				""";
+		result = (BufferedImage) genCodeAndRun(input, "", params);
+		expected = ImageOps.binaryImageImageOp(OP.MINUS, img1, img2);
+		imageEquals(expected, result);
+		input = """
+				image p(pixel p1, pixel p2) {
+					image[50,50] m1 = p1.
+					image[50,50] m2 = p2.
+					image m3 = m1 * m2.
+					:m3.
+				}
+				""";
+		result = (BufferedImage) genCodeAndRun(input, "", params);
+		expected = ImageOps.binaryImageImageOp(OP.TIMES, img1, img2);
+		imageEquals(expected, result);
+		input = """
+				image p(pixel p1, pixel p2) {
+					image[50,50] m1 = p1.
+					image[50,50] m2 = p2.
+					image m3 = m1 / m2.
+					:m3.
+				}
+				""";
+		result = (BufferedImage) genCodeAndRun(input, "", params);
+		expected = ImageOps.binaryImageImageOp(OP.DIV, img1, img2);
+		imageEquals(expected, result);
+		input = """
+				image p(pixel p1, pixel p2) {
+					image[50,50] m1 = p1.
+					image[50,50] m2 = p2.
+					image m3 = m1 % m2.
+					:m3.
+				}
+				""";
+		result = (BufferedImage) genCodeAndRun(input, "", params);
+		expected = ImageOps.binaryImageImageOp(OP.MOD, img1, img2);
+		imageEquals(expected, result);
+	}
+
+	@Test
+	void andImageAndInt() throws Exception {
+		String input;
+		Object[] params = { 0xfffcba03, 50 };
+		BufferedImage img = ImageOps.setAllPixels(ImageOps.makeImage(50, 50), (Integer) params[0]);
+		BufferedImage result;
+		BufferedImage expected;
+		input = """
+				image p(pixel p, int i) {
+					image[50,50] m1 = p.
+					image m2 = m1 * i.
+					:m2.
+				}
+				""";
+		result = (BufferedImage) genCodeAndRun(input, "", params);
+		expected = ImageOps.binaryImageScalarOp(OP.TIMES, img, (Integer) params[1]);
+		imageEquals(expected, result);
+		input = """
+				image p(pixel p, int i) {
+					image[50,50] m1 = p.
+					image m2 = m1 / i.
+					:m2.
+				}
+				""";
+		result = (BufferedImage) genCodeAndRun(input, "", params);
+		expected = ImageOps.binaryImageScalarOp(OP.DIV, img, (Integer) params[1]);
+		imageEquals(expected, result);
+		input = """
+				image p(pixel p, int i) {
+					image[50,50] m1 = p.
+					image m2 = m1 % i.
+					:m2.
+				}
+				""";
+		result = (BufferedImage) genCodeAndRun(input, "", params);
+		expected = ImageOps.binaryImageScalarOp(OP.MOD, img, (Integer) params[1]);
+		imageEquals(expected, result);
+	}
+
+	@Test
+	void andIllegalImageAndInt() throws Exception {
+		Object[] params = { 0xfffcba03, 50 };
+
+		final String input1 = """
+				image p(pixel p, int i) {
+					image[50,50] m1 = p.
+					image m2 = m1 + i.
+					:m2.
+				}
+				""";
+		assertThrows(TypeCheckException.class, () -> genCodeAndRun(input1, "", params));
+
+		final String input2 = """
+				image p(pixel p, int i) {
+					image[50,50] m1 = p.
+					image m2 = m1 - i.
+					:m2.
+				}
+				""";
+		assertThrows(TypeCheckException.class, () -> genCodeAndRun(input2, "", params));
+	}
+
+	@Test
+	void andPixelBitOps() throws Exception {
+		String input;
+		Object[] params = { 0xff0000ff, 0xffffff00 };
+
+		input = """
+				int p(pixel p1, pixel p2) {
+					int i = p1 & p2.
+					:i.
+				}
+				""";
+		assertEquals(((Integer) params[0]) & ((Integer) params[1]), (Integer) genCodeAndRun(input, "", params));
+		input = """
+				int p(pixel p1, pixel p2) {
+					int i = p1 | p2.
+					:i.
+				}
+				""";
+		assertEquals(((Integer) params[0]) | ((Integer) params[1]), (Integer) genCodeAndRun(input, "", params));
+	}
+
+	@Test
+	void andPixelAndInt() throws Exception {
+		String input;
+		Object[] params = { 0xfffcba03, 30 };
+		int result;
+		int expected;
+
+		input = """
+				pixel p(pixel p1, int i) {
+					pixel p2 = p1 * i.
+					:p2.
+				}
+				""";
+		result = (Integer) genCodeAndRun(input, "", params);
+		expected = ImageOps.binaryPackedPixelScalarOp(OP.TIMES, (Integer) params[0], (Integer) params[1]);
+		assertEquals(expected, result);
+		input = """
+				pixel p(pixel p1, int i) {
+					pixel p2 = p1 / i.
+					:p2.
+				}
+				""";
+		result = (Integer) genCodeAndRun(input, "", params);
+		expected = ImageOps.binaryPackedPixelScalarOp(OP.DIV, (Integer) params[0], (Integer) params[1]);
+		assertEquals(expected, result);
+		input = """
+				pixel p(pixel p1, int i) {
+					pixel p2 = p1 % i.
+					:p2.
+				}
+				""";
+		result = (Integer) genCodeAndRun(input, "", params);
+		expected = ImageOps.binaryPackedPixelScalarOp(OP.MOD, (Integer) params[0], (Integer) params[1]);
+	}
+
+	@Test
+	void andIllegalPixelAndInt() throws Exception {
+		Object[] params = { 0xfffcba03, 30 };
+
+		final String input1 = """
+				pixel p(pixel p1, int i) {
+					pixel p2 = p1 + i.
+					:p2.
+				}
+				""";
+		assertThrows(TypeCheckException.class, () -> genCodeAndRun(input1, "", params));
+
+		final String input2 = """
+				pixel p(pixel p1, int i) {
+					pixel p2 = p1 - i.
+					:p2.
+				}
+				""";
+		assertThrows(TypeCheckException.class, () -> genCodeAndRun(input2, "", params));
+	}
+
+	@Test
+	void andSelectors() throws Exception {
+		String input = """
+				void p(string s, pixel p) {
+					int i = 0.
+					image m1 = s.
+					image[50,50] m2 = p.
+
+					m1 = if 0 ? m1 ? m2.
+					p = if 0 ? p ? m2[i, i].
+					m1 = if 0 ? m1 ? m2:red.
+					m1 = if 0 ? m1 ? m2:grn.
+					m1 = if 0 ? m1 ? m2:blu.
+					i = if 0 ? i ? m2[i,i]:red.
+					i = if 0 ? i ? m2[i,i]:grn.
+					i = if 0 ? i ? m2[i,i]:blu.
+				}
+				""";
+		Object[] params = { owl, 0xff0000ff };
+		genCodeAndRun(input, "", params);
+	}
+
+	@Test
+	void andRgbFromImage() throws Exception {
+		String input = """
+				string p(pixel p) {
+					image[50,50] m = p.
+					int ir = m[1,2]:red.
+					int ig = m[11,22]:grn.
+					int ib = m[49,0]:blu.
+					string sr = ir.
+					string sg = ig.
+					string sb = ib.
+					string res = sr + "," + sg + "," + sb.
+					write res.
+					:res.
+				}
+				""";
+		int red = 127;
+		int grn = 83;
+		int blu = 211;
+		Object[] params = { PixelOps.pack(red, grn, blu) };
+		String expected = red + "," + grn + "," + blu;
+		assertEquals(expected, genCodeAndRun(input, "", params));
+	}
+
+	@Test
+	void andChannelsFromImage() throws Exception {
+		String input;
+		BufferedImage expected;
+		BufferedImage actual;
+		int red = 127;
+		int grn = 83;
+		int blu = 211;
+		Object[] params = { PixelOps.pack(red, grn, blu) };
+		BufferedImage img = ImageOps.setAllPixels(ImageOps.makeImage(50, 50), (Integer) params[0]);
+
+		input = """
+				image p(pixel p) {
+					image[50,50] m = p.
+				    image mr = m:red.
+					:mr.
+				}
+				""";
+		expected = ImageOps.extractRed(img);
+		actual = (BufferedImage) genCodeAndRun(input, "", params);
+		imageEquals(expected, actual);
+
+		input = """
+				image p(pixel p) {
+					image[50,50] m = p.
+				    image mg = m:grn.
+					:mg.
+				}
+				""";
+		expected = ImageOps.extractGrn(img);
+		actual = (BufferedImage) genCodeAndRun(input, "", params);
+		imageEquals(expected, actual);
+
+		input = """
+				image p(pixel p) {
+					image[50,50] m = p.
+				    image mb = m:blu.
+					:mb.
+				}
+				""";
+		expected = ImageOps.extractBlu(img);
+		actual = (BufferedImage) genCodeAndRun(input, "", params);
+		imageEquals(expected, actual);
+	}
+
+	@Test
+	void andUnaryOps() throws Exception {
+		String input = """
+				string p() {
+					int i1 = 0.
+					int i2 = 1.
+					int i3 = 99.
+					int i4 = -0.
+					int i5 = -1.
+					int i6 = -99.
+
+					string res1 = !i1.
+					string res2 = !i2.
+					string res3 = !i3.
+					string res4 = !i4.
+					string res5 = !i5.
+					string res6 = !i6.
+					string res7 = i1 == i4.
+					string res8 = -i4.
+					string res9 = -i6.
+					string res10 = i2 == -i5.
+					string res12 = i1 == -i2.
+
+					string result = res1 + res2 + res3 + res4 + res5 + res6 + res7 + res8 + res9 + res10 + res12.
+					:result.
+				}
+				""";
+		assertEquals("100100109910", (String) genCodeAndRun(input, "", new Object[] {}));
+	}
+
+	@Test
+	void andIntegerEquality() throws Exception {
+		String input = """
+				int p(int i1, int i2) {
+					int result = i1 == i2.
+					:result.
+				}
+				""";
+		Object[] params = { 1, 1 };
+		assertEquals(1, (int) genCodeAndRun(input, "", params));
+		params = new Object[] { 0xff0000ff, 0xff0000ff };
+		assertEquals(1, (int) genCodeAndRun(input, "", params));
+		params = new Object[] { 1, 2 };
+		assertEquals(0, (int) genCodeAndRun(input, "", params));
+		params = new Object[] { 0xff0000ff, 0xff0000fe };
+		assertEquals(0, (int) genCodeAndRun(input, "", params));
+	}
+
+	@Test
+	void andStringEquality() throws Exception {
+		String input = """
+				int p(string s1, string s2) {
+					int result = s1 == s2.
+					:result.
+				}
+				""";
+		Object[] params = { "a", "a" };
+		assertEquals(1, (int) genCodeAndRun(input, "", params));
+		params = new Object[] { "a", "b" };
+		assertEquals(0, (int) genCodeAndRun(input, "", params));
+	}
+
+	@Test
+	void andPixelEquality() throws Exception {
+		String input = """
+				int p(pixel p1, pixel p2) {
+					int result = p1 == p2.
+					:result.
+				}
+				""";
+		Object[] params = { 0xff0000ff, 0xff0000ff };
+		assertEquals(1, (int) genCodeAndRun(input, "", params));
+		params = new Object[] { 0xff0000ff, 0xff0000fe };
+		assertEquals(0, (int) genCodeAndRun(input, "", params));
+	}
+
 
 }
