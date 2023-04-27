@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Test;
 
 import edu.ufl.cise.plcsp23.ast.AST;
 import edu.ufl.cise.plcsp23.ast.Program;
-import edu.ufl.cise.plcsp23.CompilerComponentFactory;
 import edu.ufl.cise.plcsp23.javaCompilerClassLoader.DynamicClassLoader;
 import edu.ufl.cise.plcsp23.javaCompilerClassLoader.DynamicCompiler;
 import edu.ufl.cise.plcsp23.runtime.ConsoleIO;
@@ -523,9 +522,11 @@ class Assignment6Test_grader {
         int val = 0x88;
         Object[] params = { w, h, val };
         BufferedImage result = (BufferedImage) genCodeAndRun(input, "", params);
+
         BufferedImage expected = ImageOps.makeImage(w, h);
         int color = PixelOps.pack(0, 0, val);
         ImageOps.setAllPixels(expected, color);
+
         imageEquals(expected, result);
         assertTrue(baos.toString().equals("ff000088\n136\n") || baos.toString().equals("ff000088\r\n136\r\n"));
         show(result);
