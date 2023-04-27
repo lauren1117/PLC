@@ -476,6 +476,9 @@ public class CodeGenerator implements ASTVisitor {
     public Object visitWriteStatement(WriteStatement statementWrite, Object arg) throws PLCException {
         write = true;
         String writeStr = "ConsoleIO.write(";
+        if(statementWrite.getE().getType() == Type.PIXEL) {
+            writeStr = "ConsoleIO.writePixel(";
+        }
         writeStr += statementWrite.getE().visit(this, arg) + ");\n";
         return writeStr;
     }
