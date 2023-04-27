@@ -232,12 +232,6 @@ public class CodeGenerator implements ASTVisitor {
             imgOp = true;
             fileURL = true;
 
-            String ht = "";
-            String wt = "";
-            if(LV.getIdent().getDef().getDimension() != null) {
-                ht = (String) LV.getIdent().getDef().getDimension().getHeight().visit(this, arg);
-                wt = (String) LV.getIdent().getDef().getDimension().getWidth().visit(this, arg);
-            }
 
             if(LV.getPixelSelector() == null) {
                 if(E.getType() == Type.STRING) {
@@ -252,6 +246,8 @@ public class CodeGenerator implements ASTVisitor {
             }
             //pixel selector not empty
             else {
+                String pixelX = (String)LV.getPixelSelector().getX().visit(this, arg);
+                String pixelY = (String)LV.getPixelSelector().getY().visit(this, arg);
                 assignStr = "for(int y = 0; y < " + idName + ".getHeight(); y++) {\n";
                 for(int i = 0; i < tabTracker + 1; i++) {
                     assignStr += "\t";
@@ -263,14 +259,14 @@ public class CodeGenerator implements ASTVisitor {
 
                 //color channel empty
                 if(LV.getColor() == null) {
-                    assignStr += "ImageOps.setRGB(" + idName + ", " + wt + ", " + ht + ", " + E.visit(this, arg) + ");\n";
+                    assignStr += "ImageOps.setRGB(" + idName + ", " + pixelX + ", " + pixelY + ", " + E.visit(this, arg) + ");\n";
                 }
                 //color channel not empty
                 else {
                     pixelOp = true;
                     String color = LV.getColor().name().substring(0, 1).toUpperCase() + LV.getColor().name().substring(1);
-                    assignStr += "ImageOps.setRGB(" + idName + ", " + wt + ", " + ht;
-                    assignStr += ", PixelOps.set" + color + "(ImageOps.getRGB(" + idName + ", " + wt + ", " + ht + "), ";
+                    assignStr += "ImageOps.setRGB(" + idName + ", " + pixelX + ", " + pixelY;
+                    assignStr += ", PixelOps.set" + color + "(ImageOps.getRGB(" + idName + ", " + pixelX + ", " + pixelY + "), ";
                     assignStr += E.visit(this, arg) + "));\n";
                 }
                 for(int i = 0; i < tabTracker + 1; i++) {
