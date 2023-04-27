@@ -526,8 +526,8 @@ class Assignment6Test_grader {
         BufferedImage expected = ImageOps.makeImage(w, h);
         int color = PixelOps.pack(0, 0, val);
         ImageOps.setAllPixels(expected, color);
-
         imageEquals(expected, result);
+
         assertTrue(baos.toString().equals("ff000088\n136\n") || baos.toString().equals("ff000088\r\n136\r\n"));
         show(result);
     }
@@ -559,6 +559,7 @@ class Assignment6Test_grader {
         ConsoleIO.setConsole(test);
         Object[] params = {};
         genCodeAndRun(input, "", params);
+
         assertTrue(baos.toString().equals("ff000000\nffffffff\n") || baos.toString().equals("ff000000\r\nffffffff\r\n"));
         wait_for_input();
     }
