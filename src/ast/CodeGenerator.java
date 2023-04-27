@@ -32,10 +32,10 @@ public class CodeGenerator implements ASTVisitor {
         progType = program.getType();
         String javaCode = "";
         javaCode += "public class " //public class
-                            + program.getIdent().getName() //NAME
-                            + " {\n\t"                      //{
-                            +"public static "              // public static
-                            + getString(program.getType()) + " apply("; //TYPE apply(
+                + program.getIdent().getName() //NAME
+                + " {\n\t"                      //{
+                +"public static "              // public static
+                + getString(program.getType()) + " apply("; //TYPE apply(
 
         //concat params w string
         List<NameDef> p = program.getParamList();
@@ -174,6 +174,17 @@ public class CodeGenerator implements ASTVisitor {
                         decStr += exp.visit(this, arg);
                     }
                 }
+                else if(exp.getClass() == UnaryExpr.class) {
+                    IToken.Kind op = ((UnaryExpr) exp).getOp();
+                    if(declaration.getNameDef().getType() == Type.INT && op == IToken.Kind.BANG) {
+                        decStr += "(" + exp.visit(this, arg) + " == true ? 1 : 0)";
+                        decStr += ";\n";
+                        return decStr;
+                    }
+                    else {
+                        decStr += exp.visit(this, arg);
+                    }
+                }
                 else {
                     decStr += exp.visit(this, arg);
                 }
@@ -256,6 +267,7 @@ public class CodeGenerator implements ASTVisitor {
                 }
                 //color channel not empty
                 else {
+                    pixelOp = true;
                     String color = LV.getColor().name().substring(0, 1).toUpperCase() + LV.getColor().name().substring(1);
                     assignStr += "ImageOps.setRGB(" + idName + ", " + wt + ", " + ht;
                     assignStr += ", PixelOps.set" + color + "(ImageOps.getRGB(" + idName + ", " + wt + ", " + ht + "), ";
@@ -276,6 +288,14 @@ public class CodeGenerator implements ASTVisitor {
             if(E.getClass() == BinaryExpr.class) {
                 IToken.Kind op = ((BinaryExpr) E).getOp();
                 if(LV.getIdent().getDef().getType() == Type.INT && (op == IToken.Kind.OR || op == IToken.Kind.AND || op == IToken.Kind.LT || op == IToken.Kind.GT || op == IToken.Kind.LE || op == IToken.Kind.GE || op == IToken.Kind.EQ)) {
+                    assignStr += "(" + E.visit(this, arg) + " == true ? 1 : 0)";
+                    assignStr += ";\n";
+                    return assignStr;
+                }
+            }
+            else if(E.getClass() == UnaryExpr.class) {
+                IToken.Kind op = ((UnaryExpr) E).getOp();
+                if(LV.getIdent().getDef().getType() == Type.INT && op == IToken.Kind.BANG) {
                     assignStr += "(" + E.visit(this, arg) + " == true ? 1 : 0)";
                     assignStr += ";\n";
                     return assignStr;
